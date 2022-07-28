@@ -1,0 +1,112 @@
+[
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\MultiplayerSessions.Build.cs",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Private\\Menu.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Private\\MultiplayerSessions.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Private\\MultiplayerSessionsSubsystem.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Public\\Menu.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Public\\MultiplayerSessions.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\Public\\MultiplayerSessionsSubsystem.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerSessions.53.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Character\\ShooterAnimInstance.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Character\\ShooterAnimInstance.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Character\\ShooterCharacter.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Character\\ShooterCharacter.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\GameMode\\LobbyGameMode.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\GameMode\\LobbyGameMode.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\HUD\\OverHeadWidget.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\HUD\\OverHeadWidget.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\MultiplayerShooter.Build.cs",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\MultiplayerShooter.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\MultiplayerShooter.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\MultiplayerShooterGameModeBase.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\MultiplayerShooterGameModeBase.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Weapons\\Weapon.cpp",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	},
+	{
+		"file": "G:\\Unreal5 Projects\\MultiplayerShooter\\Source\\MultiplayerShooter\\Weapons\\Weapon.h",
+		"command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX64\\x64\\cl.exe\" @\"G:\\Unreal5 Projects\\MultiplayerShooter\\.vscode\\compileCommands_Default\\MultiplayerShooter.219.rsp\"",
+		"directory": "D:\\Epic Games\\UE_5.0\\Engine\\Source"
+	}
+]
