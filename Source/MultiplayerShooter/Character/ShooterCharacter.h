@@ -20,11 +20,13 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override; 
 	virtual void PostInitializeComponents() override; 
 	void PlayFireMontage(bool bAiming); 
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
+	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override; 
+	void Elim(); 
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -42,6 +44,10 @@ protected:
 	virtual void Jump() override; 
 	void FireButtonPressed(); 
 	void FireButtonReleased(); 
+
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHP();
 private: 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* SpringArm;
@@ -78,6 +84,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ElimMontage;
+
 	void PlayHitReactMontage();
 
 	void HideCameraIfCharacterClose(); 
@@ -98,11 +107,22 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f; 
 
-	UPROPERTY(RepliatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health; 
+
+	class AShooterPlayerController* ShooterPlayerController; 
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	bool bElimmed = false; 
+
+	FTimerHandle ElimTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 5.f;
+
+	void ElimTimerFinished();
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped(); 
@@ -114,4 +134,5 @@ public:
 	FVector GetHitTarget() const; 
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 };

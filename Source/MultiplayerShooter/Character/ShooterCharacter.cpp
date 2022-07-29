@@ -13,6 +13,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "ShooterAnimInstance.h"
 #include "MultiplayerShooter/MultiplayerShooter.h"
+#include "MultiplayerShooter/PlayerController/ShooterPlayerController.h"
+#include "MultiplayerShooter/GameMode/ShooterGameMode.h"
+#include "TimerManager.h"
+
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -46,6 +50,8 @@ AShooterCharacter::AShooterCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f; 
 	MinNetUpdateFrequency = 33.f; 
+
+	Health = MaxHealth;
 }
 
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -79,6 +85,15 @@ void AShooterCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void AShooterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
 void AShooterCharacter::PlayHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -99,10 +114,37 @@ void AShooterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void AShooterCharacter::Elim()
+{
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &AShooterCharacter::ElimTimerFinished, ElimDelay);
+}
+
+void AShooterCharacter::MulticastElim_Implementation()
+{
+	bElimmed = true;
+	PlayElimMontage();
+}
+
+void AShooterCharacter::ElimTimerFinished()
+{
+	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	if (ShooterGameMode)
+	{
+		ShooterGameMode->RequestRespawn(this, Controller);
+	}
+	Health = MaxHealth;
+}
+
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UpdateHUDHP();
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &AShooterCharacter::ReceiveDamage);
+	}
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
@@ -317,6 +359,24 @@ void AShooterCharacter::FireButtonReleased()
 	}
 }
 
+void AShooterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHP();
+	PlayHitReactMontage();
+
+	if (Health == 0.f)
+	{
+		AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+		if (ShooterGameMode)
+		{
+			ShooterPlayerController = ShooterPlayerController == nullptr ? Cast <AShooterPlayerController>(Controller) : ShooterPlayerController;
+			AShooterPlayerController* AttackerController = Cast<AShooterPlayerController>(InstigatorController);
+			ShooterGameMode->PlayerEliminated(this, ShooterPlayerController, AttackerController);
+		}
+	}
+}
+
 void AShooterCharacter::TurnInPlace(float DeltaTime)
 {
 	if (AO_Yaw > 90.f)
@@ -359,11 +419,6 @@ void AShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
-void AShooterCharacter::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
-}
-
 void AShooterCharacter::HideCameraIfCharacterClose()
 {
 	if (!IsLocallyControlled()) return; 
@@ -390,6 +445,21 @@ float AShooterCharacter::CalculateSpeed()
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
 	return Velocity.Size();
+}
+
+void AShooterCharacter::OnRep_Health()
+{
+	UpdateHUDHP();
+	PlayHitReactMontage();
+}
+
+void AShooterCharacter::UpdateHUDHP()
+{
+	ShooterPlayerController = ShooterPlayerController == nullptr ? Cast<AShooterPlayerController>(Controller) : ShooterPlayerController;
+	if (ShooterPlayerController)
+	{
+		ShooterPlayerController->SetHUDHP(Health, MaxHealth);
+	}
 }
 
 void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
