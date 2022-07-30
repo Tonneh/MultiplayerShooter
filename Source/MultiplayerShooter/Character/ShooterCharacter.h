@@ -49,6 +49,8 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHP();
+	// Poll for any relevant classes and initalize our hud
+	void PollInit(); 
 private: 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* SpringArm;
@@ -111,6 +113,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health; 
 
+	UPROPERTY()
 	class AShooterPlayerController* ShooterPlayerController; 
 
 	UFUNCTION()
@@ -155,6 +158,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound; 
+
+	UPROPERTY()
+	class AShooterPlayerState* ShooterPlayerState;
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped(); 

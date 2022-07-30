@@ -30,7 +30,6 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bAiming);
 }
 
-
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -74,7 +73,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 void UCombatComponent::Fire()
 {
-	if (bCanFire)
+	if (bCanFire && EquippedWeapon)
 	{
 		bCanFire = false;
 		ServerFire(HitTarget);
@@ -101,7 +100,6 @@ void UCombatComponent::FireTimerFinished()
 		Fire();
 	}
 }
-
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {

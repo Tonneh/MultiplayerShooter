@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -178,7 +179,6 @@ void AShooterCharacter::ElimTimerFinished()
 	{
 		ShooterGameMode->RequestRespawn(this, Controller);
 	}
-	Health = MaxHealth;
 }
 
 void AShooterCharacter::Destroyed()
@@ -220,6 +220,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 		CalculateAO_Pitch();
 	}
 	HideCameraIfCharacterClose();
+	PollInit();
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -296,7 +297,7 @@ void AShooterCharacter::CrouchButtonPressed()
 
 void AShooterCharacter::AimButtonPressed()
 {
-	if (Combat)
+	if (Combat && IsWeaponEquipped())
 	{
 		Combat->SetAiming(true);
 	}
@@ -400,7 +401,7 @@ void AShooterCharacter::Jump()
 
 void AShooterCharacter::FireButtonPressed()
 {
-	if (Combat)
+	if (Combat && IsWeaponEquipped())
 	{
 		Combat->FireButtonPressed(true);
 	}
@@ -514,6 +515,19 @@ void AShooterCharacter::UpdateHUDHP()
 	if (ShooterPlayerController)
 	{
 		ShooterPlayerController->SetHUDHP(Health, MaxHealth);
+	}
+}
+
+void AShooterCharacter::PollInit()
+{
+	if (ShooterPlayerState == nullptr)
+	{
+		ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
+		if (ShooterPlayerState)
+		{
+			ShooterPlayerState->AddToScore(0.f);
+			ShooterPlayerState->AddToDeaths(0);
+		}
 	}
 }
 
