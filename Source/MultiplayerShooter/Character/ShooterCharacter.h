@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MultiplayerShooter/ShooterTypes/TurningInPlace.h"
 #include "MultiplayerSHooter/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS()
@@ -26,7 +27,7 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
-
+	virtual void Destroyed() override;
 protected:
 	virtual void BeginPlay() override;
 
@@ -123,6 +124,37 @@ private:
 	float ElimDelay = 5.f;
 
 	void ElimTimerFinished();
+
+	// Dissolve Effect
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+	FOnTimelineFloat DissolveTrack; 
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue); 
+	void StartDissolve();
+	
+	// Dynamic instance that can be changed at runtime
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; 
+
+	// Material instance set on blueprint, used with the dynamic material
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstance; 
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve; 
+
+	// Elim Bot
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect; 
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent; 
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ElimBotSound; 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped(); 
@@ -135,4 +167,6 @@ public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 };
