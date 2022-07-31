@@ -20,7 +20,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
-
+#include "MultiplayerShooter/Weapons/WeaponTypes.h"
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -100,6 +100,25 @@ void AShooterCharacter::PlayElimMontage()
 	}
 }
 
+void AShooterCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
 void AShooterCharacter::PlayHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -132,6 +151,10 @@ void AShooterCharacter::Elim()
 
 void AShooterCharacter::MulticastElim_Implementation()
 {
+	if (ShooterPlayerController)
+	{
+		ShooterPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bElimmed = true;
 	PlayElimMontage();
 
@@ -234,6 +257,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", EInputEvent::IE_Released, this, &AShooterCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", EInputEvent::IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", EInputEvent::IE_Released, this, &AShooterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Reload", EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadButtonPressed);
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight); 
@@ -292,6 +316,14 @@ void AShooterCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
+	}
+}
+
+void AShooterCharacter::ReloadButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->Reload();
 	}
 }
 
@@ -585,6 +617,12 @@ FVector AShooterCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;
+}
+
+ECombatState AShooterCharacter::GetCombatState() const
+{
+	if (Combat == nullptr) return ECombatState::ECS_MAX;
+	return Combat->CombatState;
 }
 
 

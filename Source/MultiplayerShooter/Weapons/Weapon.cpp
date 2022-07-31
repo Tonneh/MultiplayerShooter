@@ -10,6 +10,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "MultiplayerShooter/PlayerController/ShooterPlayerController.h"
 
 AWeapon::AWeapon()
 {
@@ -59,6 +60,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState); 
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
@@ -102,6 +104,50 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr)
+	{
+		ShooterOwnerCharacter = nullptr;
+		ShooterOwnerController = nullptr;
+	}
+	else 
+	{
+		SetHUDAmmo();
+	}
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr ? Cast<AShooterCharacter>(GetOwner()) : ShooterOwnerCharacter;
+	if (ShooterOwnerCharacter)
+	{
+		ShooterOwnerController = ShooterOwnerController == nullptr ? Cast<AShooterPlayerController>(ShooterOwnerCharacter->Controller) : ShooterOwnerController;
+		if (ShooterOwnerController)
+		{
+			ShooterOwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MaxAmmo);
+	SetHUDAmmo();
+}
+
+void AWeapon::SpendRound()
+{
+	Ammo = FMath::Clamp(Ammo - 1, 0, MaxAmmo);
+	SetHUDAmmo();
+}
+
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
@@ -124,6 +170,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 	}
+}
+
+bool AWeapon::isEmpty() const
+{
+	return Ammo <= 0;
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget)
@@ -155,6 +206,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -163,5 +215,7 @@ void AWeapon::Dropped()
 	FDetachmentTransformRules DetatchRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetatchRules);
 	SetOwner(nullptr);
+	ShooterOwnerCharacter = nullptr;
+	ShooterOwnerController = nullptr;
 }
 

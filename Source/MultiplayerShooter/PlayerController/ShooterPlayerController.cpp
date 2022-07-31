@@ -47,6 +47,26 @@ void AShooterPlayerController::SetHUDDeaths(int32 Deaths)
 	}
 }
 
+void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD->CharacterOverlay->WeaponAmmoAmount)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d |"), Ammo);
+		ShooterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void AShooterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD->CharacterOverlay->CarriedAmmoAmount)
+	{
+		FString CarriedAmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+}
+
 void AShooterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);

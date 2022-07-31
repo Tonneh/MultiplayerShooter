@@ -26,4 +26,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* DeathAmount;
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* WeaponAmmoAmount;
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* CarriedAmmoAmount;
 };

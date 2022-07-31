@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MultiplayerShooter/Weapons/Weapon.h"
+#include "MultiplayerShooter/ShooterTypes/CombatStates.h"
 
 void UShooterAnimInstance::NativeInitializeAnimation()
 {
@@ -70,7 +71,11 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
             FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World);
             FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - ShooterCharacter->GetHitTarget()));
             RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 30.f);
-
         }
     }
+
+    bUseFabrik = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+    bUseAimOffsets = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading; 
+    bTransformRightHand = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+
 }
