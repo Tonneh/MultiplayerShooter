@@ -66,6 +66,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(AShooterCharacter, OverlappingWeapon, COND_OwnerOnly); 
 	DOREPLIFETIME(AShooterCharacter, Health);
+	DOREPLIFETIME(AShooterCharacter, bDisableGameplay);
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -170,12 +171,10 @@ void AShooterCharacter::MulticastElim_Implementation()
 	StartDissolve();
 
 	// Disable Character Movement 
-
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
-	if (ShooterPlayerController)
+	bDisableGameplay = true;
+	if (Combat)
 	{
-		DisableInput(ShooterPlayerController); 
+		Combat->FireButtonPressed(false);
 	}
 	
 	// Disable Collision 
@@ -212,6 +211,13 @@ void AShooterCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent();
 	}
+
+	AShooterGameMode* ShooterGameMode = Cast<AShooterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = ShooterGameMode && ShooterGameMode->GetMatchState() != MatchState::InProgress;
+	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
 }
 
 void AShooterCharacter::BeginPlay()
@@ -229,11 +235,24 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RotateInPlace(DeltaTime);
+	HideCameraIfCharacterClose();
+	PollInit();
+}
+
+void AShooterCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false; 
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
 	}
-	else 
+	else
 	{
 		TimeSinceLastMovementReplication += DeltaTime;
 		if (TimeSinceLastMovementReplication > 0.25f)
@@ -242,8 +261,6 @@ void AShooterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	HideCameraIfCharacterClose();
-	PollInit();
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -267,6 +284,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AShooterCharacter::MoveForward(float Value)
 {
+	if (bDisableGameplay) return;
 	if (Controller && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f); 
@@ -277,6 +295,7 @@ void AShooterCharacter::MoveForward(float Value)
 
 void AShooterCharacter::MoveRight(float Value)
 {
+	if (bDisableGameplay) return;
 	const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f); 
 	const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y)); 
 	AddMovementInput(Direction, Value); 	
@@ -294,6 +313,7 @@ void AShooterCharacter::LookUp(float Value)
 
 void AShooterCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		if (HasAuthority())
@@ -309,6 +329,7 @@ void AShooterCharacter::EquipButtonPressed()
 
 void AShooterCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -321,6 +342,7 @@ void AShooterCharacter::CrouchButtonPressed()
 
 void AShooterCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->Reload();
@@ -329,6 +351,11 @@ void AShooterCharacter::ReloadButtonPressed()
 
 void AShooterCharacter::AimButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		Combat->SetAiming(false);
+		return;
+	}
 	if (Combat && IsWeaponEquipped())
 	{
 		Combat->SetAiming(true);
@@ -337,6 +364,7 @@ void AShooterCharacter::AimButtonPressed()
 
 void AShooterCharacter::AimButtonReleased()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->SetAiming(false);
@@ -421,6 +449,7 @@ void AShooterCharacter::SimProxiesTurn()
 
 void AShooterCharacter::Jump()
 {
+	if (bDisableGameplay) return;
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -433,6 +462,7 @@ void AShooterCharacter::Jump()
 
 void AShooterCharacter::FireButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat && IsWeaponEquipped())
 	{
 		Combat->FireButtonPressed(true);
@@ -441,6 +471,7 @@ void AShooterCharacter::FireButtonPressed()
 
 void AShooterCharacter::FireButtonReleased()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);

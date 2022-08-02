@@ -7,15 +7,80 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
+#include "MultiplayerShooter/GameState/ShooterGameState.h"
+
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
+
+AShooterGameMode::AShooterGameMode()
+{
+	bDelayedStart = true; 
+}
+
+void AShooterGameMode::BeginPlay()
+{
+	Super::BeginPlay(); 
+
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+void AShooterGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		AShooterPlayerController* ShooterPlayer = Cast<AShooterPlayerController>(*It);
+		if (ShooterPlayer)
+		{
+			ShooterPlayer->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
+void AShooterGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			SetMatchState(MatchState::Cooldown);
+		}
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			RestartGame();
+		}
+	}
+}
 
 void AShooterGameMode::PlayerEliminated(AShooterCharacter* ElimmedCharacter, AShooterPlayerController* VictimController, AShooterPlayerController* AttackerController)
 {
 	AShooterPlayerState* AttackerPlayerState = AttackerController ? Cast<AShooterPlayerState>(AttackerController->PlayerState) : nullptr;
 	AShooterPlayerState* VictimPlayerState = VictimController ? Cast<AShooterPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	AShooterGameState* ShooterGameState = GetGameState<AShooterGameState>();
+
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && ShooterGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+		ShooterGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if (VictimPlayerState)
 	{
