@@ -35,19 +35,19 @@ public:
 	*/
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsCenter;
+	class UTexture2D* CrosshairsCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		UTexture2D* CrosshairsLeft;
+	UTexture2D* CrosshairsLeft;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		UTexture2D* CrosshairsRight;
+	UTexture2D* CrosshairsRight;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		UTexture2D* CrosshairsTop;
+	UTexture2D* CrosshairsTop;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		UTexture2D* CrosshairsBottom;
+	UTexture2D* CrosshairsBottom;
 
 	UPROPERTY(EditAnywhere)
 	float ZoomedFOV = 30.f; 
@@ -59,6 +59,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay = .15f;
+
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true;
 

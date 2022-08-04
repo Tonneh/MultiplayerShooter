@@ -141,10 +141,12 @@ private:
 	// Dissolve Effect
 	UPROPERTY(VisibleAnywhere)
 	UTimelineComponent* DissolveTimeline;
+
 	FOnTimelineFloat DissolveTrack; 
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue); 
+
 	void StartDissolve();
 	
 	// Dynamic instance that can be changed at runtime
