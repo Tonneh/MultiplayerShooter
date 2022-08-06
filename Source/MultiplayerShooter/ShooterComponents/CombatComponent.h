@@ -9,28 +9,35 @@
 #include "MultiplayerShooter/ShooterTypes/CombatStates.h"
 #include "CombatComponent.generated.h"
 
-class AWeapon; 
+class AWeapon;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYERSHOOTER_API UCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
-public:	
+public:
 	UCombatComponent();
 	friend class AShooterCharacter;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+
 	void Reload();
-	
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
 	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
+
 protected:
 	virtual void BeginPlay() override;
-	void SetAiming(bool bIsAiming); 
+	void SetAiming(bool bIsAiming);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
@@ -45,10 +52,10 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
-	
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult); 
 
-	void SetHUDCrosshairs(float DeltaTime); 
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetHUDCrosshairs(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
@@ -56,72 +63,76 @@ protected:
 	void HandleReload();
 
 	int32 AmountToReload();
-private: 
+
+private:
 	UPROPERTY()
-	class AShooterCharacter* Character; 
+	class AShooterCharacter* Character;
 	UPROPERTY()
-	class AShooterPlayerController* Controller; 
+	class AShooterPlayerController* Controller;
 	UPROPERTY()
 	class AShooterHUD* HUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
-	AWeapon* EquippedWeapon; 
+	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
 
-	UPROPERTY(EditAnywhere) 
-	float BaseWalkSpeed; 
+	UPROPERTY(EditAnywhere)
+	float BaseWalkSpeed;
 
 	UPROPERTY(EditAnywhere)
-	float AimWalkSpeed; 
+	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
 
 	// HUD and Crosshairs
 
-	float CrosshairVelocityFactor; 
+	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
-	float CrosshairAimFactor; 
-	float CrosshairShootingFactor; 
+	float CrosshairAimFactor;
+	float CrosshairShootingFactor;
 
 	FVector HitTarget;
 
 	FHUDPackage HUDPackage;
 
 	// Aiming and fov, when not aiming, set to cameras base pov
-	float DefaultFOV; 
-	
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ZoomedFOV = 30.f; 
+	float DefaultFOV;
 
-	float CurrentFOV; 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ZoomInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
 
-	//auto fire
+	// auto fire
 
-	FTimerHandle FireTimer; 
+	FTimerHandle FireTimer;
 
 	bool bCanFire = true;
 	void StartFireTimer();
-	void FireTimerFinished(); 
+	void FireTimerFinished();
+	bool CanFire();
 
-	bool CanFire(); 
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	// Ammo
 
 	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
 
-	UFUNCTION()
-	void OnRep_CarriedAmmo();
-
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo = 30; 
-
+	int32 StartingARAmmo = 30;
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 0;
@@ -135,15 +146,18 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingShotgunAmmo = 0;
 
-	void InitializedCarriedAmmo(); 
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 0;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
-	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo = 0;
 
 	UFUNCTION()
-	void OnRep_CombatState();
+	void OnRep_CarriedAmmo();
 
+	void InitializedCarriedAmmo();
 	void UpdateAmmoValues();
-public:	
-		
+	void UpdateShotgunAmmoValues();
+
+public:
 };

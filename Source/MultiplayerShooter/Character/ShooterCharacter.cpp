@@ -21,6 +21,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
 #include "MultiplayerShooter/Weapons/WeaponTypes.h"
+
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -116,16 +117,22 @@ void AShooterCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_RocketLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("RocketLauncher");
 			break;
 		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_SMG:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_Shotgun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
+			break;
+		case EWeaponType::EWT_Sniper:
+			SectionName = FName("Sniper");
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("GrenadeLauncher");
 			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
@@ -204,6 +211,11 @@ void AShooterCharacter::MulticastElim_Implementation()
 	if (ElimBotSound)
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
+
+	if (IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper)
+	{
+		ShowSniperScopeWidget(false);
 	}
 }
 
@@ -668,5 +680,4 @@ ECombatState AShooterCharacter::GetCombatState() const
 	if (Combat == nullptr) return ECombatState::ECS_MAX;
 	return Combat->CombatState;
 }
-
 

@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Projectile.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,6 +10,8 @@
 #include "MultiplayerShooter/MultiplayerShooter.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AProjectile::AProjectile()
 {
@@ -27,25 +28,29 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
 }
 
+void AProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
-			Tracer, 
+			Tracer,
 			CollisionBox,
-			FName(), 
+			FName(),
 			GetActorLocation(),
-			GetActorRotation(), 
+			GetActorRotation(),
 			EAttachLocation::KeepWorldPosition);
 	}
 	if (HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
-	
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -53,10 +58,53 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	Destroy();
 }
 
-void AProjectile::Tick(float DeltaTime)
+void AProjectile::SpawnTrailSystem()
 {
-	Super::Tick(DeltaTime);
+	if (TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false);
+	}
+}
 
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectile::DestroyTimerFinish, DestroyTime);
+}
+
+void AProjectile::DestroyTimerFinish()
+{
+	Destroy();
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this,						// World COntext object
+				Damage,						// base damage
+				Damage / 10,				// minimum damage
+				GetActorLocation(),			// origin
+				DamageInnerRadius,			// inner radius
+				DamageOuterRadius,			// outter radius
+				1.f,						// fall off
+				UDamageType::StaticClass(), // damage type class
+				TArray<AActor*>(),			// Ignoreactors
+				this,						// damage causer
+				FiringController);			// instigator controller
+		}
+	}
 }
 
 void AProjectile::Destroyed()
@@ -71,4 +119,3 @@ void AProjectile::Destroyed()
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 	}
 }
-
