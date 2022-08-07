@@ -74,8 +74,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
         }
     }
 
-    bUseFabrik = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-    bUseAimOffsets = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !ShooterCharacter->GetDisableGameplay();
-    bTransformRightHand = ShooterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !ShooterCharacter->GetDisableGameplay();
-
+    bUseFabrik = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+    bUseAimOffsets = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !ShooterCharacter->GetDisableGameplay();
+    bTransformRightHand = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !ShooterCharacter->GetDisableGameplay();
 }

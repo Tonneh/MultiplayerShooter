@@ -4,6 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+#include "Components/BoxComponent.h"
 
 AGrenadeProjectile::AGrenadeProjectile()
 {
@@ -15,6 +16,7 @@ AGrenadeProjectile::AGrenadeProjectile()
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->SetIsReplicated(true);
 	ProjectileMovementComponent->bShouldBounce = true;
+
 }
 
 void AGrenadeProjectile::Destroyed()

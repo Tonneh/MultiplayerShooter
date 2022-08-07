@@ -151,6 +151,20 @@ void AShooterPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
 	}
 }
 
+void AShooterPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->GrenadesText)
+	{
+		FString GrenadesText = FString::Printf(TEXT("%02d"), Grenades);
+		ShooterHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		HUDGrenades = Grenades;
+	}
+}
+
 void AShooterPlayerController::SetHUDTime()
 {
 	// check if we on server, if so then we may get the gamemode and set the level starting time
@@ -206,6 +220,11 @@ void AShooterPlayerController::PollInit()
 				SetHUDHP(HUDHealth, HUDMaxHealth);
 				SetHUDScore(HUDScore);
 				SetHUDDeaths(HUDDeaths);
+				AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+				if (ShooterCharacter && ShooterCharacter->GetCombat())
+				{
+					SetHUDGrenades(ShooterCharacter->GetCombat()->GetGrenades());
+				}
 			}
 		}
 	}
