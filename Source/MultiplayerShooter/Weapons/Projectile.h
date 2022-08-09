@@ -6,6 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
 
+class UParticleSystem;
+class USoundCue;
+class UNiagaraSystem;
+class UNiagaraComponent;
+class UBoxComponent;
+class UProjectileMovementComponent;
+class UParticleSystemComponent;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AProjectile : public AActor
 {
@@ -37,22 +45,22 @@ protected:
 	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ImpactParticles;
+	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;
+	USoundCue* ImpactSound;
 
 	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem;
+	UNiagaraSystem* TrailSystem;
 
 	UPROPERTY()
-	class UNiagaraComponent* TrailSystemComponent;
+	UNiagaraComponent* TrailSystemComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* CollisionBox;
+	UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
 	float DamageInnerRadius = 200.f;
@@ -65,7 +73,7 @@ private:
 	UParticleSystem* Tracer;
 
 	UPROPERTY()
-	class UParticleSystemComponent* TracerComponent;
+	UParticleSystemComponent* TracerComponent;
 
 	FTimerHandle DestroyTimer;
 

@@ -12,10 +12,21 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecond UMETA(DisplayName = "Equipped Second"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_Max UMETA(DisplayName = "DefaultMax")
 };
+
+// forward declarations 
+class UTexture2D;
+class USoundCue;
+class USphereComponent;
+class UWidgetComponent;
+class UAnimationAsset;
+class ACasing;
+class AShooterCharacter;
+class AShooterPlayerController;
 
 UCLASS()
 class MULTIPLAYERSHOOTER_API AWeapon : public AActor
@@ -35,7 +46,7 @@ public:
 	*/
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	class UTexture2D* CrosshairsCenter;
+	UTexture2D* CrosshairsCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsLeft;
@@ -68,15 +79,20 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* EquipSound; 
+	USoundCue* EquipSound; 
 
 	// Enable or disable custom depth 
 	
 	void EnableCustomDepth(bool bEnable); 
 
+	bool bDestroyWeapon = false;
+
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void OnWeaponStateSet();
+	virtual void OnEquipped();
+	virtual void OnDropped();
+	virtual void OnEquippedSecond(); 
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult); 
@@ -90,7 +106,7 @@ private:
 	USkeletalMeshComponent* WeaponMesh; 
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class USphereComponent* AreaSphere; 
+	USphereComponent* AreaSphere; 
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
@@ -99,13 +115,13 @@ private:
 	void OnRep_WeaponState(); 
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class UWidgetComponent* PickupWidget; 
+	UWidgetComponent* PickupWidget; 
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	class UAnimationAsset* FireAnimation;
+	UAnimationAsset* FireAnimation;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class ACasing> CasingClass;
+	TSubclassOf<ACasing> CasingClass;
 	
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
@@ -121,9 +137,9 @@ private:
 	void SpendRound();
 
 	UPROPERTY()
-	class AShooterCharacter* ShooterOwnerCharacter; 
+	AShooterCharacter* ShooterOwnerCharacter; 
 	UPROPERTY()
-	class AShooterPlayerController* ShooterOwnerController; 
+	AShooterPlayerController* ShooterOwnerController; 
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;

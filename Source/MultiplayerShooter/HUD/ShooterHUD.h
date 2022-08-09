@@ -19,9 +19,11 @@ public:
 	float CrosshairSpread; 
 	FLinearColor CrosshairsColor; 
 };
-/**
- * 
- */
+
+class UUserWidget;
+class UCharacterOverlay;
+class UAnnouncement;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterHUD : public AHUD
 {
@@ -30,10 +32,10 @@ public:
 	virtual void DrawHUD() override; 
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
 	
 	UPROPERTY()
-	class UCharacterOverlay* CharacterOverlay; 
+	UCharacterOverlay* CharacterOverlay; 
 
 	void AddCharacterOverlay();
 
@@ -41,7 +43,7 @@ public:
 	TSubclassOf<UUserWidget> AnnouncementClass; 
 
 	UPROPERTY()
-	class UAnnouncement* Announcement;
+	UAnnouncement* Announcement;
 
 	void AddAnnouncement();
 protected:

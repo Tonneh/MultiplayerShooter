@@ -10,6 +10,10 @@
 #include "CombatComponent.generated.h"
 
 class AWeapon;
+class AProjectile;
+class AShooterCharacter;
+class AShooterPlayerController;
+class AShooterHUD;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYERSHOOTER_API UCombatComponent : public UActorComponent
@@ -23,18 +27,18 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
-
+	void SwapWeapons();
 	void DropEquippedWeapon();
 
 	void AttachActorToRightHand(AActor* ActorToAttach);
-
 	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void AttachActorToBackpack(AActor* ActorToAttach);
 
 	void UpdateCarriedAmmo();
 
 	void Reload();
 
-	void PlayEquippedWeaponSound();
+	void PlayEquippedWeaponSound(AWeapon* WeaponToEquip);
 
 	void ReloadEmptyWeapon();
 
@@ -56,51 +60,55 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount); 
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
-
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	UFUNCTION()
+	void OnRep_SecondWeapon();
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 	void Fire();
-
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
-
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
-
 	void SetHUDCrosshairs(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
-
 	void HandleReload();
-
 	int32 AmountToReload();
 
 	void ThrowGrenade();
-
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
-	
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> GrenadeClass; 
+	TSubclassOf<AProjectile> GrenadeClass;
+
 private:
 	UPROPERTY()
-	class AShooterCharacter* Character;
+	AShooterCharacter* Character;
 	UPROPERTY()
-	class AShooterPlayerController* Controller;
+	AShooterPlayerController* Controller;
 	UPROPERTY()
-	class AShooterHUD* HUD;
+	AShooterHUD* HUD;
+
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondWeapon)
+	AWeapon* SecondWeapon; 
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -160,6 +168,9 @@ private:
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 200;
+
+	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30;
 
 	UPROPERTY(EditAnywhere)
@@ -190,15 +201,17 @@ private:
 	void ShowAttachedGrenade(bool bShowGrenade);
 
 	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
-	int32 Grenades = 4; 
+	int32 Grenades = 4;
 
 	UFUNCTION()
-	void OnRep_Grenades(); 
+	void OnRep_Grenades();
 
 	UPROPERTY(EditAnywhere)
 	int32 MaxGrenades = 4;
 
 	void UpdateHUDGrenades();
+
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	bool ShouldSwapWeapons();
 };

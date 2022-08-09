@@ -6,9 +6,8 @@
 #include "Weapon.h"
 #include "HitScanWeapon.generated.h"
 
-/**
- * 
- */
+class UParticleSystem;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AHitScanWeapon : public AWeapon
 {
@@ -20,7 +19,7 @@ protected:
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ImpactParticles;
+	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;

@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "OverHeadWidget.generated.h"
-/**
- * 
- */
+
+class UTextBlock;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API UOverHeadWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* DisplayText; 
+	UTextBlock* DisplayText; 
 
 	void SetDisplayText(FString TextToDisplay); 
 

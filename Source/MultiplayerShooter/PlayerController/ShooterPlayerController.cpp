@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ShooterPlayerController.h"
 #include "MultiplayerShooter/HUD/ShooterHUD.h"
 #include "MultiplayerShooter/HUD/CharacterOverlay.h"
@@ -17,7 +16,7 @@
 
 void AShooterPlayerController::BeginPlay()
 {
-	Super::BeginPlay(); 
+	Super::BeginPlay();
 
 	ShooterHUD = Cast<AShooterHUD>(GetHUD());
 	ServerCheckMatchState();
@@ -35,7 +34,7 @@ void AShooterPlayerController::Tick(float DeltaTime)
 void AShooterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
 	DOREPLIFETIME(AShooterPlayerController, MatchState);
 }
 
@@ -54,16 +53,34 @@ void AShooterPlayerController::SetHUDHP(float Health, float MaxHealth)
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
 	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->HealthBar && ShooterHUD->CharacterOverlay->HealthText)
 	{
-		const float HealthPercent = Health / MaxHealth; 
+		const float HealthPercent = Health / MaxHealth;
 		ShooterHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 		FString HealthText = FString::Printf(TEXT("%d"), FMath::CeilToInt(Health));
 		ShooterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
-		HUDHealth = Health; 
+		bInitializeHealth = true;
+		HUDHealth = Health;
 		HUDMaxHealth = MaxHealth;
+	}
+}
+
+void AShooterPlayerController::SetHUDShield(float Shield, float MaxShield)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->ShieldBar && ShooterHUD->CharacterOverlay->ShieldText)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		ShooterHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
+		FString ShieldText = FString::Printf(TEXT("%d"), FMath::CeilToInt(Shield));
+		ShooterHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+	}
+	else
+	{
+		bInitializeShield = true;
+		HUDShield = Shield;
+		HUDMaxShield = MaxShield;
 	}
 }
 
@@ -77,8 +94,8 @@ void AShooterPlayerController::SetHUDScore(float Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true; 
-		HUDScore = Score; 
+		bInitializeScore = true;
+		HUDScore = Score;
 	}
 }
 
@@ -92,7 +109,7 @@ void AShooterPlayerController::SetHUDDeaths(int32 Deaths)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true; 
+		bInitializeDeaths = true;
 		HUDDeaths = Deaths;
 	}
 }
@@ -105,6 +122,11 @@ void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%02d|"), Ammo);
 		ShooterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else 
+	{
+		bInitializeWeaponAmmo = true; 
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void AShooterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -114,6 +136,11 @@ void AShooterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString CarriedAmmoText = FString::Printf(TEXT("%02d"), Ammo);
 		ShooterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+	else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 
@@ -128,7 +155,7 @@ void AShooterPlayerController::SetHUDMatchCountdown(float CountdownTime)
 			return;
 		}
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
-		int32 Seconds = CountdownTime - Minutes * 60; 
+		int32 Seconds = CountdownTime - Minutes * 60;
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 		ShooterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
 	}
@@ -161,6 +188,7 @@ void AShooterPlayerController::SetHUDGrenades(int32 Grenades)
 	}
 	else
 	{
+		bInitializeGrenades = true;
 		HUDGrenades = Grenades;
 	}
 }
@@ -169,7 +197,7 @@ void AShooterPlayerController::SetHUDTime()
 {
 	// check if we on server, if so then we may get the gamemode and set the level starting time
 	// since on the server begin() in player coontroller is called b4 the beginplay in gamemode, so we need to
-	// retrieve the LevelStartingTime from gamemode. 
+	// retrieve the LevelStartingTime from gamemode.
 	if (HasAuthority())
 	{
 		ShooterGameMode = ShooterGameMode == nullptr ? Cast<AShooterGameMode>(UGameplayStatics::GetGameMode(this)) : ShooterGameMode;
@@ -178,11 +206,14 @@ void AShooterPlayerController::SetHUDTime()
 			LevelStartingTime = ShooterGameMode->LevelStartingTime;
 		}
 	}
-	
+
 	float TimeLeft = 0.f;
-	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	if (MatchState == MatchState::WaitingToStart)
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::InProgress)
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::Cooldown)
+		TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 
 	if (HasAuthority())
@@ -217,13 +248,23 @@ void AShooterPlayerController::PollInit()
 			CharacterOverlay = ShooterHUD->CharacterOverlay;
 			if (CharacterOverlay)
 			{
-				SetHUDHP(HUDHealth, HUDMaxHealth);
-				SetHUDScore(HUDScore);
-				SetHUDDeaths(HUDDeaths);
+				if (bInitializeHealth)
+					SetHUDHP(HUDHealth, HUDMaxHealth);
+				if (bInitializeShield)
+					SetHUDShield(HUDShield, HUDMaxShield);
+				if (bInitializeScore)
+					SetHUDScore(HUDScore);
+				if (bInitializeDeaths)
+					SetHUDDeaths(HUDDeaths);
+				if (bInitializeWeaponAmmo)
+					SetHUDWeaponAmmo(HUDWeaponAmmo);
+				if (bInitializeCarriedAmmo)
+					SetHUDCarriedAmmo(HUDCarriedAmmo);
 				AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
 				if (ShooterCharacter && ShooterCharacter->GetCombat())
 				{
-					SetHUDGrenades(ShooterCharacter->GetCombat()->GetGrenades());
+					if (bInitializeGrenades)
+						SetHUDGrenades(ShooterCharacter->GetCombat()->GetGrenades());
 				}
 			}
 		}
@@ -256,7 +297,8 @@ void AShooterPlayerController::ClientReportServerTime_Implementation(float TimeO
 
 float AShooterPlayerController::GetServerTime()
 {
-	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
+	if (HasAuthority())
+		return GetWorld()->GetTimeSeconds();
 	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
 }
 
@@ -271,7 +313,7 @@ void AShooterPlayerController::ReceivedPlayer()
 
 void AShooterPlayerController::OnMatchStateSet(FName State)
 {
-	MatchState = State; 
+	MatchState = State;
 
 	if (MatchState == MatchState::InProgress)
 	{
@@ -300,7 +342,8 @@ void AShooterPlayerController::HandleMatchHasStarted()
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
 	if (ShooterHUD)
 	{
-		if (ShooterHUD->CharacterOverlay == nullptr) ShooterHUD->AddCharacterOverlay();
+		if (ShooterHUD->CharacterOverlay == nullptr)
+			ShooterHUD->AddCharacterOverlay();
 		if (ShooterHUD->Announcement)
 		{
 			ShooterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
@@ -317,7 +360,7 @@ void AShooterPlayerController::HandleCooldown()
 		if (ShooterHUD->Announcement && ShooterHUD->Announcement->AnnouncementText && ShooterHUD->Announcement->InfoText)
 		{
 			ShooterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
-			FString AnnouncementText("New Match Starts In:"); 
+			FString AnnouncementText("New Match Starts In:");
 			ShooterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 			AShooterGameState* ShooterGameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(this));
 			AShooterPlayerState* ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
@@ -346,7 +389,6 @@ void AShooterPlayerController::HandleCooldown()
 					}
 				}
 				ShooterHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
-
 			}
 		}
 	}
@@ -360,11 +402,11 @@ void AShooterPlayerController::HandleCooldown()
 
 void AShooterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
 {
-	WarmupTime = Warmup; 
+	WarmupTime = Warmup;
 	MatchTime = Match;
 	CooldownTime = Cooldown;
-	LevelStartingTime = StartingTime; 
-	MatchState = StateOfMatch; 
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
 	if (ShooterHUD && MatchState == MatchState::WaitingToStart)
 	{

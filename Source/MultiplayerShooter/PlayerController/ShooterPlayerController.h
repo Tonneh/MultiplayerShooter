@@ -6,15 +6,17 @@
 #include "GameFramework/PlayerController.h"
 #include "ShooterPlayerController.generated.h"
 
-/**
- * 
- */
+class AShooterHUD;
+class UCharacterOverlay;
+class AShooterGameMode;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
 	void SetHUDHP(float Health, float MaxHealth);
+	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
 	void SetHUDWeaponAmmo(int32 Ammo);
@@ -58,7 +60,7 @@ protected:
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
 private:
 	UPROPERTY()
-	class AShooterHUD* ShooterHUD;
+	AShooterHUD* ShooterHUD;
 
 	float LevelStartingTime = 0.f; 
 	float MatchTime = 0.f; 
@@ -73,16 +75,27 @@ private:
 	void OnRep_MatchState();
 
 	UPROPERTY()
-	class UCharacterOverlay* CharacterOverlay; 
+	UCharacterOverlay* CharacterOverlay; 
 
 	UPROPERTY()
-	class AShooterGameMode* ShooterGameMode;
+	AShooterGameMode* ShooterGameMode;
 
 	bool bInitializeCharacterOverlay = false; 
 
 	float HUDHealth; 
+	bool bInitializeHealth = false;
 	float HUDMaxHealth;
+	float HUDShield;
+	bool bInitializeShield = false;
+	float HUDMaxShield;
 	float HUDScore; 
+	bool bInitializeScore = false; 
 	int32 HUDDeaths; 
+	bool bInitializeDeaths = false; 
 	int32 HUDGrenades;
+	bool bInitializeGrenades = false; 
+	float HUDCarriedAmmo; 
+	bool bInitializeCarriedAmmo = false;
+	float HUDWeaponAmmo; 
+	bool bInitializeWeaponAmmo = false;
 };

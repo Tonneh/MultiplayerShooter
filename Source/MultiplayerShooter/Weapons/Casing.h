@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "Casing.generated.h"
 
+
+class USoundCue;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API ACasing : public AActor
 {
@@ -27,5 +30,5 @@ private:
 	float ShellEjectionImpulse;
 
 	UPROPERTY(EditAnywhere) 
-	class USoundCue* ShellSound;
+	USoundCue* ShellSound;
 };

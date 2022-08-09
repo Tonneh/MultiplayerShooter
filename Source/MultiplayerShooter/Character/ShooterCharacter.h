@@ -10,6 +10,19 @@
 #include "MultiplayerShooter/ShooterTypes/CombatStates.h"
 #include "ShooterCharacter.generated.h"
 
+class UInputComponent;
+class AController;
+class USpringArmComponent;
+class UCameraComponent;
+class UWidgetComponent;
+class AWeapon;
+class UCombatComponent;
+class UAnimMontage;
+class AShooterPlayerController;
+class USoundCue;
+class AShooterPlayerState;
+class UBuffComponent;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -19,7 +32,7 @@ public:
 	AShooterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	void RotateInPlace(float DeltaTime);
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
@@ -28,8 +41,8 @@ public:
 	void PlayThrowGrenadeMontage();
 
 	virtual void OnRep_ReplicatedMovement() override;
-	void Elim();
 
+	void Elim();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
@@ -39,6 +52,12 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+
+	void UpdateHUDHP();
+	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+
+	void SpawnDefaultWeapon();
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,33 +78,35 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void GrenadeButtonPressed();
-
+	void DropOrDestroyWeapon(AWeapon* Weapon);
 	UFUNCTION()
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDHP();
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser);
 	// Poll for any relevant classes and initalize our hud
 	void PollInit();
-
+	
 private:
 	// Components
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class USpringArmComponent* SpringArm;
+	USpringArmComponent* SpringArm;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class UCameraComponent* Camera;
+	UCameraComponent* Camera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
+	UWidgetComponent* OverheadWidget;
 
 	// Weapon and COmbat
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
-	class AWeapon* OverlappingWeapon;
+	AWeapon* OverlappingWeapon;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UCombatComponent* Combat;
+	UCombatComponent* Combat;
+
+	UPROPERTY(VisibleAnywhere)
+	UBuffComponent* Buff;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -114,7 +135,7 @@ private:
 	// play animmontages
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	class UAnimMontage* FireWeaponMontage;
+	UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
@@ -140,11 +161,20 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health;
 
-	UPROPERTY()
-	class AShooterPlayerController* ShooterPlayerController;
+	UFUNCTION()
+	void OnRep_Health(float LastHealth);
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Shield(float LastShield);
+
+	UPROPERTY()
+	AShooterPlayerController* ShooterPlayerController;
 
 	bool bElimmed = false;
 
@@ -186,15 +216,21 @@ private:
 	UParticleSystemComponent* ElimBotComponent;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ElimBotSound;
+	USoundCue* ElimBotSound;
 
 	UPROPERTY()
-	class AShooterPlayerState* ShooterPlayerState;
+	AShooterPlayerState* ShooterPlayerState;
 
-	// Grenade 
-	
+	// Grenade
+
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* AttachedGrenade; 
+	UStaticMeshComponent* AttachedGrenade;
+
+	// Default Weapon
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -207,11 +243,16 @@ public:
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
 };

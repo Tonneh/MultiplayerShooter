@@ -6,9 +6,9 @@
 #include "Blueprint/UserWidget.h"
 #include "CharacterOverlay.generated.h"
 
-/**
- * 
- */
+class UProgressBar;
+class UTextBlock;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API UCharacterOverlay : public UUserWidget
 {
@@ -16,14 +16,15 @@ class MULTIPLAYERSHOOTER_API UCharacterOverlay : public UUserWidget
 	
 public: 
 	UPROPERTY(meta = (BindWidget))
-	class UProgressBar* HealthBar; 
-
+	UProgressBar* HealthBar; 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* HealthText; 
-
+	UTextBlock* HealthText; 
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ShieldBar;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShieldText; 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount;
-
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DeathAmount;
 	UPROPERTY(meta = (BindWidget))

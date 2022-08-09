@@ -6,9 +6,9 @@
 #include "GameFramework/PlayerState.h"
 #include "ShooterPlayerState.generated.h"
 
-/**
- * 
- */
+class AShooterCharacter;
+class AShooterPlayerController;
+
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterPlayerState : public APlayerState
 {
@@ -22,9 +22,9 @@ public:
 	void AddToDeaths(int32 DeathsAmount);
 private:
 	UPROPERTY()
-	class AShooterCharacter* Character; 
+	AShooterCharacter* Character; 
 	UPROPERTY()
-	class AShooterPlayerController* Controller; 
+	AShooterPlayerController* Controller; 
 
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths; 
