@@ -67,6 +67,8 @@ protected:
 	void Turn(float Value);
 	void LookUp(float Value);
 	void EquipButtonPressed();
+	void ScrollUp();
+	void ScrollDown(); 
 	void CrouchButtonPressed();
 	void ReloadButtonPressed();
 	void AimButtonPressed();

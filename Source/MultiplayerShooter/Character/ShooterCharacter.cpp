@@ -135,7 +135,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", EInputEvent::IE_Released, this, &AShooterCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadButtonPressed);
 	PlayerInputComponent->BindAction("ThrowGrenade", EInputEvent::IE_Pressed, this, &AShooterCharacter::GrenadeButtonPressed);
-
+	PlayerInputComponent->BindAction("ScrollSwapWeaponUp", EInputEvent::IE_Pressed, this, &AShooterCharacter::ScrollUp);
+	PlayerInputComponent->BindAction("ScrollSwapWeaponDown", EInputEvent::IE_Pressed, this, &AShooterCharacter::ScrollDown);
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AShooterCharacter::Turn);
@@ -386,6 +387,22 @@ void AShooterCharacter::EquipButtonPressed()
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
+	}
+}
+
+void AShooterCharacter::ScrollUp()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapons();
+	}
+}
+
+void AShooterCharacter::ScrollDown()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapons();
 	}
 }
 
