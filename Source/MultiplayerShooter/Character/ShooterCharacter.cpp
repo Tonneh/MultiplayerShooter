@@ -390,7 +390,29 @@ void AShooterCharacter::EquipButtonPressed()
 	}
 }
 
+void AShooterCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (Combat)
+	{
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else if (Combat->ShouldSwapWeapons())
+		{
+			Combat->SwapWeapons();
+		}
+	}
+}
+
 void AShooterCharacter::ScrollUp()
+{
+	if (bDisableGameplay)
+		return;
+	ServerScrollUp();
+}
+
+void AShooterCharacter::ServerScrollUp_Implementation()
 {
 	if (Combat && Combat->ShouldSwapWeapons())
 	{
@@ -400,24 +422,16 @@ void AShooterCharacter::ScrollUp()
 
 void AShooterCharacter::ScrollDown()
 {
+	if (bDisableGameplay)
+		return;
+	ServerScrollDown();
+}
+
+void AShooterCharacter::ServerScrollDown_Implementation()
+{
 	if (Combat && Combat->ShouldSwapWeapons())
 	{
 		Combat->SwapWeapons();
-	}
-}
-
-void AShooterCharacter::ServerEquipButtonPressed_Implementation()
-{
-	if (Combat)
-	{
-		if (OverlappingWeapon) 
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else if (Combat->ShouldSwapWeapons()) 
-		{
-			Combat->SwapWeapons();
-		}
 	}
 }
 

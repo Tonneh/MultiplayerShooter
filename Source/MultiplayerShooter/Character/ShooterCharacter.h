@@ -113,6 +113,12 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
+	UFUNCTION(Server, Reliable)
+	void ServerScrollUp();
+
+	UFUNCTION(Server, Reliable)
+	void ServerScrollDown();
+
 	// Rotation for aiming etc
 
 	float AO_Yaw;
