@@ -857,3 +857,10 @@ ECombatState AShooterCharacter::GetCombatState() const
 		return ECombatState::ECS_MAX;
 	return Combat->CombatState;
 }
+
+bool AShooterCharacter::isLocallyReloading()
+{
+	if (Combat == nullptr)
+		return false;
+	return Combat->bLocallyReloading;
+}

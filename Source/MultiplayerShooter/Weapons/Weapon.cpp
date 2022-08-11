@@ -64,7 +64,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -185,16 +184,6 @@ void AWeapon::OnRep_Owner()
 	}
 }
 
-void AWeapon::OnRep_Ammo()
-{
-	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr ? Cast<AShooterCharacter>(GetOwner()) : ShooterOwnerCharacter;
-	if (ShooterOwnerCharacter && ShooterOwnerCharacter->GetCombat() && isFull())
-	{
-		ShooterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
-	}
-	SetHUDAmmo();
-}
-
 void AWeapon::SetHUDAmmo()
 {
 	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr ? Cast<AShooterCharacter>(GetOwner()) : ShooterOwnerCharacter;
@@ -210,8 +199,9 @@ void AWeapon::SetHUDAmmo()
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MaxAmmo);
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MaxAmmo);
 	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)
@@ -222,10 +212,41 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 	}
 }
 
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if (HasAuthority())
+		return;
+	Ammo = ServerAmmo;
+	Sequence--;
+	Ammo -= Sequence;
+	SetHUDAmmo();
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority())
+		return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MaxAmmo);
+	ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr ? Cast<AShooterCharacter>(GetOwner()) : ShooterOwnerCharacter;
+	if (ShooterOwnerCharacter && ShooterOwnerCharacter->GetCombat() && isFull())
+	{
+		ShooterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
+	SetHUDAmmo();
+}
+
 void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MaxAmmo);
 	SetHUDAmmo();
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		Sequence++;
+	}
 }
 
 bool AWeapon::isEmpty() const
@@ -267,10 +288,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-	if (HasAuthority())
-	{
-		SpendRound();
-	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()

@@ -7,8 +7,8 @@
 #include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
-UENUM(BlueprintType) 
-enum class EWeaponState : uint8 
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
@@ -19,16 +19,16 @@ enum class EWeaponState : uint8
 };
 
 UENUM(BlueprintType)
-enum class EFireType : uint8 
+enum class EFireType : uint8
 {
 	EFT_HitScan UMETA(Display = "HitScan Weapon"),
 	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
-	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"), 
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
 
 	EFT_MAX UMETA(DisplayName = "DefaultMax")
 };
 
-// forward declarations 
+// forward declarations
 class UTexture2D;
 class USoundCue;
 class USphereComponent;
@@ -42,19 +42,19 @@ UCLASS()
 class MULTIPLAYERSHOOTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void ShowPickupWidget(bool bShowWidget); 
-	virtual void Fire(const FVector& HitTarget); 
+	void ShowPickupWidget(bool bShowWidget);
+	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	FVector TraceEndWithScatter(const FVector& HitTarget);
 
 	/*
-	* Textures for weapon crosshair
-	*/
+	 * Textures for weapon crosshair
+	 */
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsCenter;
@@ -72,12 +72,12 @@ public:
 	UTexture2D* CrosshairsBottom;
 
 	UPROPERTY(EditAnywhere)
-	float ZoomedFOV = 30.f; 
+	float ZoomedFOV = 30.f;
 
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.f;
 
-	//Automatic fire
+	// Automatic fire
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay = .15f;
@@ -90,16 +90,16 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 
 	UPROPERTY(EditAnywhere)
-	USoundCue* EquipSound; 
+	USoundCue* EquipSound;
 
-	// Enable or disable custom depth 
-	
-	void EnableCustomDepth(bool bEnable); 
+	// Enable or disable custom depth
+
+	void EnableCustomDepth(bool bEnable);
 
 	bool bDestroyWeapon = false;
 
 	UPROPERTY(EditAnywhere)
-	EFireType FireType; 
+	EFireType FireType;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	bool bUseScatter = false;
@@ -109,14 +109,14 @@ protected:
 	virtual void OnWeaponStateSet();
 	virtual void OnEquipped();
 	virtual void OnDropped();
-	virtual void OnEquippedSecond(); 
+	virtual void OnEquippedSecond();
 	UFUNCTION()
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult); 
-	
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// Trace end with scatter
 
@@ -128,47 +128,49 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	USkeletalMeshComponent* WeaponMesh; 
+	USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	USphereComponent* AreaSphere; 
+	USphereComponent* AreaSphere;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
 
 	UFUNCTION()
-	void OnRep_WeaponState(); 
+	void OnRep_WeaponState();
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	UWidgetComponent* PickupWidget; 
+	UWidgetComponent* PickupWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	UAnimationAsset* FireAnimation;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ACasing> CasingClass;
-	
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;
 
 	UPROPERTY(EditAnywhere)
+	int32 Ammo;
+	UPROPERTY(EditAnywhere)
 	int32 MaxAmmo;
-
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+	void SpendRound();
+	// Number of Unprocessed server requested for ammo, incremnted in spend round, decremented in clientupdateammo
+	int32 Sequence = 0; 
 
 	virtual void OnRep_Owner() override;
-	 
-	void SpendRound();
 
 	UPROPERTY()
-	AShooterCharacter* ShooterOwnerCharacter; 
+	AShooterCharacter* ShooterOwnerCharacter;
 	UPROPERTY()
-	AShooterPlayerController* ShooterOwnerController; 
+	AShooterPlayerController* ShooterOwnerController;
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
-public:	
+
+public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
