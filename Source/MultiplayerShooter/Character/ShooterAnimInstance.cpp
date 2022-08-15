@@ -75,7 +75,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
     }
 
     bUseFabrik = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
-	if (ShooterCharacter->IsLocallyControlled() && ShooterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	if (ShooterCharacter->IsLocallyControlled() && ShooterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade && ShooterCharacter->bFinishedSwapping)
 	{
 		bUseFabrik = !ShooterCharacter->isLocallyReloading();
     }

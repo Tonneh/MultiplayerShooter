@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "ShooterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+
 class AShooterHUD;
 class UCharacterOverlay;
 class AShooterGameMode;
@@ -32,6 +34,10 @@ public:
 	virtual void ReceivedPlayer() override; // Sync with server clock asap
 	void OnMatchStateSet(FName State);
 	void HandleCooldown();
+
+	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override; 
 	void SetHUDTime(); 
@@ -109,6 +115,8 @@ protected:
 	float PingAnimationRunningTime = 0.f;
 	UPROPERTY(EditAnywhere)
 	float CheckPingFrequency = 20.f; 
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 100.f;
 };

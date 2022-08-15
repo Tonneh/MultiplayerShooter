@@ -22,6 +22,8 @@ class AShooterPlayerController;
 class USoundCue;
 class AShooterPlayerState;
 class UBuffComponent;
+class UBoxComponent; 
+class ULagCompensationComponent; 
 
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -35,10 +37,12 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+
 	void PlayFireMontage(bool bAiming);
 	void PlayElimMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
 
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -59,6 +63,10 @@ public:
 
 	void SpawnDefaultWeapon();
 
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+	bool bFinishedSwapping = false; 
 protected:
 	virtual void BeginPlay() override;
 
@@ -86,6 +94,45 @@ protected:
 	// Poll for any relevant classes and initalize our hud
 	void PollInit();
 	
+	// Hit Boxes for ServerSide Rewind
+	
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* head;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* pelvis; 
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_02;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_03;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_r;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_r;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* backpack;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* blanket;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_r;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_l;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_r;
+
 private:
 	// Components
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -104,11 +151,18 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+
+	// Components 
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 
 	UPROPERTY(VisibleAnywhere)
 	UBuffComponent* Buff;
+
+	ULagCompensationComponent* LagCompensation; 
+	
+	// server equip and swap weapon rpcs
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -156,6 +210,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapMontage;
 
 	void PlayHitReactMontage();
 
@@ -264,4 +321,5 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
 	bool isLocallyReloading();
+	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 };

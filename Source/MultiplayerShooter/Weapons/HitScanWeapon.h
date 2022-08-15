@@ -23,8 +23,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
 
-	UPROPERTY(EditAnywhere)
-	float Damage = 8.f;
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -35,5 +33,4 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* FireSound; 
-
 };

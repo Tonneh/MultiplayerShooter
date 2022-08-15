@@ -126,6 +126,19 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius = 75.f;
 
+	UPROPERTY(EditAnywhere)
+	float Damage = 8.f;
+
+	UPROPERTY(Replicated, EditAnywhere)
+	bool bUseServerSideRewind = false; 
+
+	UPROPERTY()
+	AShooterCharacter* ShooterOwnerCharacter;
+	UPROPERTY()
+	AShooterPlayerController* ShooterOwnerController;
+
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -162,11 +175,6 @@ private:
 
 	virtual void OnRep_Owner() override;
 
-	UPROPERTY()
-	AShooterCharacter* ShooterOwnerCharacter;
-	UPROPERTY()
-	AShooterPlayerController* ShooterOwnerController;
-
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
@@ -181,4 +189,5 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMaxCapacity() const { return MaxAmmo; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

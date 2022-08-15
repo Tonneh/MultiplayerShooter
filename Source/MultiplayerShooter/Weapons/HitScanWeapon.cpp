@@ -9,6 +9,8 @@
 #include "Sound/SoundCue.h"
 #include "DrawDebugHelpers.h"
 #include "WeaponTypes.h"
+#include "MultiplayerShooter/ShooterComponents/LagCompensationComponent.h"
+#include "MultiplayerShooter/PlayerController/ShooterPlayerController.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -24,13 +26,25 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FVector Start = SocketTransform.GetLocation(); 
 
 		FHitResult FireHit;
-
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(FireHit.GetActor());
-		if (ShooterCharacter && HasAuthority() && InstigatorController)
+		if (ShooterCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(ShooterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthDamage)
+			{
+				UGameplayStatics::ApplyDamage(ShooterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			}
+			if (!HasAuthority() && bUseServerSideRewind)
+			{
+				ShooterOwnerCharacter = ShooterOwnerCharacter == nullptr ? Cast<AShooterCharacter>(OwnerPawn) : ShooterOwnerCharacter;
+				ShooterOwnerController = ShooterOwnerController == nullptr ? Cast<AShooterPlayerController>(InstigatorController) : ShooterOwnerController;
+				if (ShooterOwnerController && ShooterOwnerCharacter && ShooterOwnerCharacter->GetLagCompensation() && ShooterOwnerCharacter->IsLocallyControlled())
+				{
+					ShooterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(ShooterCharacter, Start, HitTarget, ShooterOwnerController->GetServerTime() - ShooterOwnerController->SingleTripTime, this);
+				}
+			}
 		}
 		if (ImpactParticles)
 		{
