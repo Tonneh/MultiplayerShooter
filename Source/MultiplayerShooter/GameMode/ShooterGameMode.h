@@ -10,9 +10,8 @@ namespace MatchState
 {
 	extern MULTIPLAYERSHOOTER_API const FName Cooldown; // Match duration has been reached. Display Winner and begin cooldown timer. 
 }
-/**
- * 
- */
+
+class AShooterPlayerState;
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterGameMode : public AGameMode
 {
@@ -21,8 +20,9 @@ public:
 	AShooterGameMode();
 	virtual void Tick(float DeltaTime) override;
 	virtual void PlayerEliminated(class AShooterCharacter* ElimmedCharacter,
-		class AShooterPlayerController* VictimController, AShooterPlayerController* AttackerController);
+	class AShooterPlayerController* VictimController, AShooterPlayerController* AttackerController);
 	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController);
+	void PlayerLeftGame(AShooterPlayerState* PlayerLeaving);
 
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f; 

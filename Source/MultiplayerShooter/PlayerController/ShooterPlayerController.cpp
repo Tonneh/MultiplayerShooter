@@ -14,6 +14,7 @@
 #include "MultiplayerShooter/GameState/ShooterGameState.h"
 #include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
 #include "Components/Image.h"
+#include "MultiplayerShooter/HUD/ReturnToMainMenu.h"
 
 void AShooterPlayerController::BeginPlay()
 {
@@ -124,9 +125,9 @@ void AShooterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%02d|"), Ammo);
 		ShooterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
-	else 
+	else
 	{
-		bInitializeWeaponAmmo = true; 
+		bInitializeWeaponAmmo = true;
 		HUDWeaponAmmo = Ammo;
 	}
 }
@@ -271,6 +272,15 @@ void AShooterPlayerController::PollInit()
 			}
 		}
 	}
+}
+
+void AShooterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if (InputComponent == nullptr)
+		return;
+
+	InputComponent->BindAction("Quit", IE_Pressed, this, &AShooterPlayerController::ShowReturnToMainMenu);
 }
 
 void AShooterPlayerController::OnPossess(APawn* InPawn)
@@ -441,7 +451,6 @@ void AShooterPlayerController::StopHighPingWarning()
 		if (ShooterHUD->CharacterOverlay->IsAnimationPlaying(ShooterHUD->CharacterOverlay->HighPingAnimation))
 		{
 			ShooterHUD->CharacterOverlay->StopAnimation(ShooterHUD->CharacterOverlay->HighPingAnimation);
-
 		}
 	}
 }
@@ -473,6 +482,66 @@ void AShooterPlayerController::CheckPing(float DeltaTime)
 		if (PingAnimationRunningTime > HighPingDuration)
 		{
 			StopHighPingWarning();
+		}
+	}
+}
+
+void AShooterPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidget == nullptr)
+		return;
+	if (ReturnToMainMenu == nullptr)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidget);
+	}
+	if (ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen; 
+		if (bReturnToMainMenuOpen)
+		{
+			ReturnToMainMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown();
+		}
+	}
+}
+
+void AShooterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void AShooterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if (Attacker && Victim && Self)
+	{
+		ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+		if (ShooterHUD)
+		{
+			if (Attacker == Self && Victim != Self)
+			{
+				ShooterHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				return;
+			} 
+			if (Victim == Self && Attacker != Self)
+			{
+				ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
+				return;
+			}
+			if (Attacker == Victim && Attacker == Self)
+			{
+				ShooterHUD->AddElimAnnouncement("You", "yourself");
+				return;
+			}
+			if (Attacker == Victim && Attacker != Self)
+			{
+				ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves"); 
+				return; 
+			}
+			ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
 		}
 	}
 }

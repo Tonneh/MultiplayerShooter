@@ -79,8 +79,34 @@ void AShooterGameMode::PlayerEliminated(AShooterCharacter* ElimmedCharacter, ASh
 
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && ShooterGameState)
 	{
+		TArray<AShooterPlayerState*> PlayersCurrentlyInLead;
+		for (auto LeadPlayer : ShooterGameState->TopScoringPlayers)
+		{
+			PlayersCurrentlyInLead.Add(LeadPlayer);
+		}
+
 		AttackerPlayerState->AddToScore(1.f);
 		ShooterGameState->UpdateTopScore(AttackerPlayerState);
+		if (ShooterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			AShooterCharacter* Leader = Cast<AShooterCharacter>(AttackerPlayerState->GetPawn());
+			if (Leader)
+			{
+				Leader->MulticastGainedTheLead();
+			}
+		}
+
+		for (int32 i = 0; i < PlayersCurrentlyInLead.Num(); i++)
+		{
+			if (!ShooterGameState->TopScoringPlayers.Contains(PlayersCurrentlyInLead[i]))
+			{
+				AShooterCharacter* LostLead = Cast<AShooterCharacter>(PlayersCurrentlyInLead[i]->GetPawn());
+				if (LostLead)
+				{
+					LostLead->MulticastLostTheLead();
+				}
+			}
+		}
 	}
 	if (VictimPlayerState)
 	{
@@ -88,7 +114,16 @@ void AShooterGameMode::PlayerEliminated(AShooterCharacter* ElimmedCharacter, ASh
 	}
 	if (ElimmedCharacter)
 	{
-		ElimmedCharacter->Elim();
+		ElimmedCharacter->Elim(false);
+	}
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	{
+		AShooterPlayerController* ShooterPlayer = Cast<AShooterPlayerController>(*It);
+		if (ShooterPlayer && AttackerPlayerState && VictimPlayerState)
+		{
+			ShooterPlayer->BroadcastElim(AttackerPlayerState, VictimPlayerState);
+		}
 	}
 }
 
@@ -105,5 +140,21 @@ void AShooterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+	}
+}
+
+void AShooterGameMode::PlayerLeftGame(AShooterPlayerState* PlayerLeaving)
+{
+	if (PlayerLeaving == nullptr)
+		return;
+	AShooterGameState* ShooterGameState = GetGameState<AShooterGameState>();
+	if (ShooterGameState && ShooterGameState->TopScoringPlayers.Contains(PlayerLeaving))
+	{
+		ShooterGameState->TopScoringPlayers.Remove(PlayerLeaving);
+	}
+	AShooterCharacter* CharacterLeaving = Cast<AShooterCharacter>(PlayerLeaving->GetPawn());
+	if (CharacterLeaving)
+	{
+		CharacterLeaving->Elim(true);
 	}
 }

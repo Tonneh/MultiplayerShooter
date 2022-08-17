@@ -24,6 +24,10 @@ class AShooterPlayerState;
 class UBuffComponent;
 class UBoxComponent; 
 class ULagCompensationComponent; 
+class UNiagaraSystem;
+class UNiagaraComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -46,9 +50,9 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 
-	void Elim();
+	void Elim(bool bPlayerLeftGame);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElim();
+	void MulticastElim(bool bPlayerLeftGame);
 	virtual void Destroyed() override;
 
 	UPROPERTY(Replicated)
@@ -67,6 +71,17 @@ public:
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;
 
 	bool bFinishedSwapping = false; 
+
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
+
+	FOnLeftGame OnLeftGame;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -250,6 +265,8 @@ private:
 
 	void ElimTimerFinished();
 
+	bool bLeftGame = false; 
+
 	// Dissolve Effect
 	UPROPERTY(VisibleAnywhere)
 	UTimelineComponent* DissolveTimeline;
@@ -272,7 +289,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* DissolveCurve;
 
-	// Elim Bot
+	// Elim
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ElimBotEffect;
@@ -285,6 +302,12 @@ private:
 
 	UPROPERTY()
 	AShooterPlayerState* ShooterPlayerState;
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* CrownSystem; 
+
+	UPROPERTY()
+	UNiagaraComponent* CrownComponent;
 
 	// Grenade
 

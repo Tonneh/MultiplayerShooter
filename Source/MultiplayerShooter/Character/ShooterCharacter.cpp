@@ -23,6 +23,9 @@
 #include "MultiplayerShooter/Weapons/WeaponTypes.h"
 #include "Components/BoxComponent.h"
 #include "MultiplayerShooter/ShooterComponents/LagCompensationComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "MultiplayerShooter/GameState/ShooterGameState.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -709,7 +712,7 @@ void AShooterCharacter::CalculateAO_Pitch()
 	}
 }
 
-void AShooterCharacter::Elim()
+void AShooterCharacter::Elim(bool bPlayerLeftGame)
 {
 	if (Combat)
 	{
@@ -722,12 +725,12 @@ void AShooterCharacter::Elim()
 			DropOrDestroyWeapon(Combat->SecondWeapon);
 		}
 	}
-	MulticastElim();
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &AShooterCharacter::ElimTimerFinished, ElimDelay);
+	MulticastElim(bPlayerLeftGame);
 }
 
-void AShooterCharacter::MulticastElim_Implementation()
+void AShooterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame; 
 	if (ShooterPlayerController)
 	{
 		ShooterPlayerController->SetHUDWeaponAmmo(0);
@@ -774,14 +777,55 @@ void AShooterCharacter::MulticastElim_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &AShooterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 void AShooterCharacter::ElimTimerFinished()
 {
 	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
-	if (ShooterGameMode)
+	if (ShooterGameMode && !bLeftGame)
 	{
 		ShooterGameMode->RequestRespawn(this, Controller);
+	}
+	if (bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
+	}
+}
+
+void AShooterCharacter::ServerLeaveGame_Implementation()
+{
+	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
+	if (ShooterGameMode && ShooterPlayerState)
+	{
+		ShooterGameMode->PlayerLeftGame(ShooterPlayerState);
+	}
+}
+
+void AShooterCharacter::MulticastGainedTheLead_Implementation()
+{
+	if (CrownSystem == nullptr)
+		return;
+	if (CrownComponent == nullptr)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+	}
+	if (CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void AShooterCharacter::MulticastLostTheLead_Implementation()
+{
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
 	}
 }
 
@@ -940,6 +984,12 @@ void AShooterCharacter::PollInit()
 		{
 			ShooterPlayerState->AddToScore(0.f);
 			ShooterPlayerState->AddToDeaths(0);
+
+			AShooterGameState* ShooterGameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(this));
+			if (ShooterGameState && ShooterGameState->TopScoringPlayers.Contains(ShooterPlayerState))
+			{
+				MulticastGainedTheLead();
+			}
 		}
 	}
 }
