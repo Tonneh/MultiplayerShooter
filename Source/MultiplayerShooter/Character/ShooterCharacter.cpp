@@ -187,7 +187,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	RotateInPlace(DeltaTime);
-	HideCameraIfCharacterClose();
+	HideCharacterIfCameraClose();
 	PollInit();
 }
 
@@ -467,7 +467,7 @@ void AShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
-void AShooterCharacter::HideCameraIfCharacterClose()
+void AShooterCharacter::HideCharacterIfCameraClose()
 {
 	if (!IsLocallyControlled())
 		return;
@@ -478,6 +478,10 @@ void AShooterCharacter::HideCameraIfCharacterClose()
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+		if (Combat && Combat->SecondWeapon && Combat->SecondWeapon->GetWeaponMesh())
+		{
+			Combat->SecondWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -485,6 +489,10 @@ void AShooterCharacter::HideCameraIfCharacterClose()
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (Combat && Combat->SecondWeapon && Combat->SecondWeapon->GetWeaponMesh())
+		{
+			Combat->SecondWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
@@ -761,6 +769,7 @@ void AShooterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Spawn Elimination Bot
 	if (ElimBotEffect)
@@ -786,7 +795,7 @@ void AShooterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 void AShooterCharacter::ElimTimerFinished()
 {
-	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	ShooterGameMode = ShooterGameMode == nullptr ? GetWorld()->GetAuthGameMode<AShooterGameMode>() : ShooterGameMode;
 	if (ShooterGameMode && !bLeftGame)
 	{
 		ShooterGameMode->RequestRespawn(this, Controller);
@@ -799,7 +808,7 @@ void AShooterCharacter::ElimTimerFinished()
 
 void AShooterCharacter::ServerLeaveGame_Implementation()
 {
-	AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	ShooterGameMode = ShooterGameMode == nullptr ? GetWorld()->GetAuthGameMode<AShooterGameMode>() : ShooterGameMode;
 	ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
 	if (ShooterGameMode && ShooterPlayerState)
 	{
@@ -813,7 +822,7 @@ void AShooterCharacter::MulticastGainedTheLead_Implementation()
 		return;
 	if (CrownComponent == nullptr)
 	{
-		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetMesh(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
 	}
 	if (CrownComponent)
 	{
@@ -870,7 +879,7 @@ void AShooterCharacter::Destroyed()
 		ElimBotComponent->DestroyComponent();
 	}
 
-	AShooterGameMode* ShooterGameMode = Cast<AShooterGameMode>(UGameplayStatics::GetGameMode(this));
+	ShooterGameMode = ShooterGameMode == nullptr ? GetWorld()->GetAuthGameMode<AShooterGameMode>() : ShooterGameMode;
 	bool bMatchNotInProgress = ShooterGameMode && ShooterGameMode->GetMatchState() != MatchState::InProgress;
 	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
@@ -880,8 +889,13 @@ void AShooterCharacter::Destroyed()
 
 void AShooterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
-	if (bElimmed)
+	ShooterGameMode = ShooterGameMode == nullptr ? GetWorld()->GetAuthGameMode<AShooterGameMode>() : ShooterGameMode;
+	if (bElimmed || ShooterGameMode == nullptr)
 		return;
+	Damage = ShooterGameMode->CalculateDamage(InstigatorController, Controller, Damage);
+
+	if (Damage <= 0.f)
+		return; 
 
 	float DamageToHealth = Damage;
 	if (Shield > 0.f)
@@ -904,7 +918,6 @@ void AShooterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 	if (Health == 0.f)
 	{
-		AShooterGameMode* ShooterGameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
 		if (ShooterGameMode)
 		{
 			ShooterPlayerController = ShooterPlayerController == nullptr ? Cast<AShooterPlayerController>(Controller) : ShooterPlayerController;
@@ -962,7 +975,7 @@ void AShooterCharacter::UpdateHUDAmmo()
 
 void AShooterCharacter::SpawnDefaultWeapon()
 {
-	AShooterGameMode* ShooterGameMode = Cast<AShooterGameMode>(UGameplayStatics::GetGameMode(this));
+	ShooterGameMode = ShooterGameMode == nullptr ? GetWorld()->GetAuthGameMode<AShooterGameMode>() : ShooterGameMode;
 	UWorld* World = GetWorld();
 	if (ShooterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
@@ -984,6 +997,7 @@ void AShooterCharacter::PollInit()
 		{
 			ShooterPlayerState->AddToScore(0.f);
 			ShooterPlayerState->AddToDeaths(0);
+			SetTeamColor(ShooterPlayerState->GetTeam());
 
 			AShooterGameState* ShooterGameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(this));
 			if (ShooterGameState && ShooterGameState->TopScoringPlayers.Contains(ShooterPlayerState))
@@ -1046,4 +1060,25 @@ bool AShooterCharacter::isLocallyReloading()
 	if (Combat == nullptr)
 		return false;
 	return Combat->bLocallyReloading;
+}
+
+void AShooterCharacter::SetTeamColor(ETeam Team)
+{
+	if (GetMesh() == nullptr || DefaultMaterial == nullptr)
+		return; 
+	switch (Team)
+	{
+	case ETeam::ET_NoTeam:
+		GetMesh()->SetMaterial(0, DefaultMaterial);
+		DissolveMaterialInstance = BlueDissolve;
+		break; 
+	case ETeam::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial); 
+		DissolveMaterialInstance = BlueDissolve;
+		break; 
+	case ETeam::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial);
+		DissolveMaterialInstance = RedDissolve;
+		break;
+	}
 }

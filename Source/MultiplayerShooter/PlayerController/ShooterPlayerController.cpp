@@ -15,6 +15,7 @@
 #include "MultiplayerShooter/PlayerState/ShooterPlayerState.h"
 #include "Components/Image.h"
 #include "MultiplayerShooter/HUD/ReturnToMainMenu.h"
+#include "MultiplayerShooter/ShooterTypes/Announcement.h"
 
 void AShooterPlayerController::BeginPlay()
 {
@@ -39,6 +40,51 @@ void AShooterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AShooterPlayerController, MatchState);
+	DOREPLIFETIME(AShooterPlayerController, bShowTeamScores);
+}
+
+void AShooterPlayerController::HideTeamScores()
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->RedTeamScore && ShooterHUD->CharacterOverlay->BlueTeamScore && ShooterHUD->CharacterOverlay->ScoreSpace)
+	{
+		ShooterHUD->CharacterOverlay->RedTeamScore->SetText(FText());
+		ShooterHUD->CharacterOverlay->BlueTeamScore->SetText(FText());
+		ShooterHUD->CharacterOverlay->ScoreSpace->SetText(FText());
+	}
+}
+
+void AShooterPlayerController::InitTeamScores()
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->RedTeamScore && ShooterHUD->CharacterOverlay->BlueTeamScore && ShooterHUD->CharacterOverlay->ScoreSpace)
+	{
+		FString Zero("0");
+		FString Spacer("|");
+		ShooterHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(Zero));
+		ShooterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
+		ShooterHUD->CharacterOverlay->ScoreSpace->SetText(FText::FromString(Spacer));
+	}
+}
+
+void AShooterPlayerController::SetHUDRedTeamScore(int32 RedScore)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->RedTeamScore)
+	{
+		FString Score = FString::Printf(TEXT("%d"), RedScore);
+		ShooterHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(Score));
+	}
+}
+
+void AShooterPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
+{
+	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
+	if (ShooterHUD && ShooterHUD->CharacterOverlay && ShooterHUD->CharacterOverlay->BlueTeamScore)
+	{
+		FString Score = FString::Printf(TEXT("%d"), BlueScore);
+		ShooterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Score));
+	}
 }
 
 void AShooterPlayerController::CheckTimeSync(float DeltaTime)
@@ -324,13 +370,13 @@ void AShooterPlayerController::ReceivedPlayer()
 	}
 }
 
-void AShooterPlayerController::OnMatchStateSet(FName State)
+void AShooterPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	MatchState = State;
 
 	if (MatchState == MatchState::InProgress)
 	{
-		HandleMatchHasStarted();
+		HandleMatchHasStarted(bTeamsMatch);
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
@@ -355,8 +401,10 @@ void AShooterPlayerController::ServerReportPingStatus_Implementation(bool bHighP
 	HighPingDelegate.Broadcast(bHighPing);
 }
 
-void AShooterPlayerController::HandleMatchHasStarted()
+void AShooterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 {
+	if (HasAuthority())
+		bShowTeamScores = bTeamsMatch;
 	ShooterHUD = ShooterHUD == nullptr ? Cast<AShooterHUD>(GetHUD()) : ShooterHUD;
 	if (ShooterHUD)
 	{
@@ -365,6 +413,16 @@ void AShooterPlayerController::HandleMatchHasStarted()
 		if (ShooterHUD->Announcement)
 		{
 			ShooterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (!HasAuthority())
+			return;
+		if (bTeamsMatch)
+		{
+			InitTeamScores();
+		}
+		else
+		{
+			HideTeamScores();
 		}
 	}
 }
@@ -378,34 +436,15 @@ void AShooterPlayerController::HandleCooldown()
 		if (ShooterHUD->Announcement && ShooterHUD->Announcement->AnnouncementText && ShooterHUD->Announcement->InfoText)
 		{
 			ShooterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
-			FString AnnouncementText("New Match Starts In:");
+			FString AnnouncementText(Announcement::NewMatchStartsIn);
 			ShooterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 			AShooterGameState* ShooterGameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(this));
 			AShooterPlayerState* ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
 			if (ShooterGameState && ShooterPlayerState)
 			{
 				TArray<AShooterPlayerState*> TopPlayers = ShooterGameState->TopScoringPlayers;
-				FString InfoTextString;
-				if (TopPlayers.Num() == 0)
-				{
-					InfoTextString = FString("No Winner");
-				}
-				else if (TopPlayers.Num() == 1 && TopPlayers[0] == ShooterPlayerState)
-				{
-					InfoTextString = FString("You are the Winner");
-				}
-				else if (TopPlayers.Num() == 1)
-				{
-					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
-				}
-				else if (TopPlayers.Num() > 1)
-				{
-					InfoTextString = FString::Printf(TEXT("Winners: \n"));
-					for (auto TiedPlayer : TopPlayers)
-					{
-						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
-					}
-				}
+				FString InfoTextString = bShowTeamScores ? GetTeamsInfoText(ShooterGameState) : GetInfoText(TopPlayers);
+
 				ShooterHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
 			}
 		}
@@ -416,6 +455,77 @@ void AShooterPlayerController::HandleCooldown()
 		ShooterCharacter->bDisableGameplay = true;
 		ShooterCharacter->GetCombat()->FireButtonPressed(false);
 	}
+}
+
+FString AShooterPlayerController::GetInfoText(const TArray<AShooterPlayerState*>& Players)
+{
+	AShooterPlayerState* ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
+	if (ShooterPlayerState == nullptr)
+		return FString();
+
+	FString InfoTextString;
+	if (Players.Num() == 0)
+	{
+		InfoTextString = Announcement::ThereIsNoWinner;
+	}
+	else if (Players.Num() == 1 && Players[0] == ShooterPlayerState)
+	{
+		InfoTextString = Announcement::YouAreTheWinner;
+	}
+	else if (Players.Num() == 1)
+	{
+		InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *Players[0]->GetPlayerName());
+	}
+	else if (Players.Num() > 1)
+	{
+		InfoTextString = Announcement::PlayersTiedForTheWin;
+		InfoTextString.Append(FString("\n"));
+		for (auto TiedPlayer : Players)
+		{
+			InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+		}
+	}
+	return InfoTextString;
+}
+
+FString AShooterPlayerController::GetTeamsInfoText(AShooterGameState* ShooterGameState)
+{
+	if (ShooterGameState == nullptr)
+		return FString();
+
+	FString InfoTextString;
+
+	const int32 RedTeamScore = ShooterGameState->RedTeamScore;
+	const int32 BlueTeamScore = ShooterGameState->BlueTeamScore;
+
+	if (RedTeamScore == 0 && BlueTeamScore == 0)
+	{
+		InfoTextString = Announcement::ThereIsNoWinner;
+	}
+	else if (RedTeamScore == BlueTeamScore)
+	{
+		InfoTextString = FString::Printf(TEXT("%s\n"), *Announcement::TeamsTiedForTheWin);
+		InfoTextString.Append(Announcement::RedTeam);
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(Announcement::BlueTeam);
+		InfoTextString.Append(TEXT("\n"));
+	}
+	else if (RedTeamScore > BlueTeamScore)
+	{
+		InfoTextString = Announcement::RedTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::RedTeam, RedTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+	}
+	else if (BlueTeamScore > RedTeamScore)
+	{
+		InfoTextString = Announcement::BlueTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::RedTeam, RedTeamScore));
+	}
+
+	return InfoTextString;
 }
 
 void AShooterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
@@ -496,7 +606,7 @@ void AShooterPlayerController::ShowReturnToMainMenu()
 	}
 	if (ReturnToMainMenu)
 	{
-		bReturnToMainMenuOpen = !bReturnToMainMenuOpen; 
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
 		if (bReturnToMainMenuOpen)
 		{
 			ReturnToMainMenu->MenuSetup();
@@ -525,7 +635,7 @@ void AShooterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 			{
 				ShooterHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
 				return;
-			} 
+			}
 			if (Victim == Self && Attacker != Self)
 			{
 				ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
@@ -538,11 +648,23 @@ void AShooterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 			}
 			if (Attacker == Victim && Attacker != Self)
 			{
-				ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves"); 
-				return; 
+				ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				return;
 			}
 			ShooterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
 		}
+	}
+}
+
+void AShooterPlayerController::OnRep_ShowTeamScores()
+{
+	if (bShowTeamScores)
+	{
+		InitTeamScores();
+	}
+	else
+	{
+		HideTeamScores();
 	}
 }
 

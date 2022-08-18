@@ -19,10 +19,10 @@ class MULTIPLAYERSHOOTER_API AShooterGameMode : public AGameMode
 public:
 	AShooterGameMode();
 	virtual void Tick(float DeltaTime) override;
-	virtual void PlayerEliminated(class AShooterCharacter* ElimmedCharacter,
-	class AShooterPlayerController* VictimController, AShooterPlayerController* AttackerController);
+	virtual void PlayerEliminated(class AShooterCharacter* ElimmedCharacter, class AShooterPlayerController* VictimController, AShooterPlayerController* AttackerController);
 	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController);
 	void PlayerLeftGame(AShooterPlayerState* PlayerLeaving);
+	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage);
 
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f; 
@@ -35,6 +35,7 @@ public:
 
 	float LevelStartingTime = 0.f; 
 
+	bool bTeamsMatch = false; 
 protected:
 	virtual void BeginPlay() override; 
 	virtual void OnMatchStateSet() override;

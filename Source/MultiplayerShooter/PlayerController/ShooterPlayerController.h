@@ -13,6 +13,8 @@ class UCharacterOverlay;
 class AShooterGameMode;
 class UUserWidget;
 class UReturnToMainMenu;
+class AShooterGameState;
+class AShooterPlayerState;
 
 UCLASS()
 class MULTIPLAYERSHOOTER_API AShooterPlayerController : public APlayerController
@@ -31,10 +33,14 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDRedTeamScore(int32 RedScore); 
+	void SetHUDBlueTeamScore(int32 BlueScore);
 
 	virtual float GetServerTime();			// Synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock asap
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 	void HandleCooldown();
 
 	float SingleTripTime = 0.f;
@@ -62,7 +68,7 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 
 	void CheckTimeSync(float DeltaTime);
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
@@ -78,6 +84,16 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false; 
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
+
+	FString GetInfoText(const TArray<AShooterPlayerState*>& Players);
+
+	FString GetTeamsInfoText(AShooterGameState* ShooterGameState);
 private:
 	UPROPERTY()
 	AShooterHUD* ShooterHUD;

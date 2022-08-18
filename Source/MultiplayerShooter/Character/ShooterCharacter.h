@@ -8,6 +8,7 @@
 #include "MultiplayerSHooter/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "MultiplayerShooter/ShooterTypes/CombatStates.h"
+#include "MultiplayerShooter/ShooterTypes/Team.h"
 #include "ShooterCharacter.generated.h"
 
 class UInputComponent;
@@ -26,6 +27,7 @@ class UBoxComponent;
 class ULagCompensationComponent; 
 class UNiagaraSystem;
 class UNiagaraComponent;
+class AShooterGameMode; 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -82,6 +84,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead();
 
+	void SetTeamColor(ETeam Team);
 protected:
 	virtual void BeginPlay() override;
 
@@ -231,7 +234,7 @@ private:
 
 	void PlayHitReactMontage();
 
-	void HideCameraIfCharacterClose();
+	void HideCharacterIfCameraClose();
 
 	// Player Stats
 
@@ -283,11 +286,23 @@ private:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 
 	// Material instance set on blueprint, used with the dynamic material
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
 
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* DissolveCurve;
+
+	// Team Colors
+	UPROPERTY(EditAnywhere, Category = Elim)	
+	UMaterialInstance* RedDissolve;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedMaterial;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueDissolve;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueMaterial;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DefaultMaterial;
 
 	// Elim
 
@@ -319,6 +334,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
+	UPROPERTY()
+	AShooterGameMode* ShooterGameMode; 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "MultiplayerShooter/ShooterTypes/Team.h"
 #include "ShooterPlayerState.generated.h"
 
 class AShooterCharacter;
@@ -28,4 +29,13 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Deaths)
 	int32 Deaths; 
+
+	UPROPERTY(ReplicatedUsing = OnRep_Team)
+	ETeam Team = ETeam::ET_NoTeam;
+
+	UFUNCTION() 
+	void OnRep_Team();
+public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	void SetTeam(ETeam TeamToSet);
 };
