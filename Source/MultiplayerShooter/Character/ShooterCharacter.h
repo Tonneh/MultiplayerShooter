@@ -107,6 +107,10 @@ protected:
 	void FireButtonReleased();
 	void GrenadeButtonPressed();
 	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized(); 
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser);
 	// Poll for any relevant classes and initalize our hud
@@ -362,4 +366,7 @@ public:
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
 	bool isLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
+	FORCEINLINE bool IsHoldingTheFlag() const; 
+	ETeam GetTeam(); 
+	void SetHoldingFlag(bool bHolding);
 };

@@ -26,6 +26,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "MultiplayerShooter/GameState/ShooterGameState.h"
+#include "MultiplayerShooter/PlayerStart/TeamPlayerStart.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -54,7 +55,6 @@ AShooterCharacter::AShooterCharacter()
 	Buff->SetIsReplicated(true);
 
 	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("Lag Compensation"));
-
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -193,6 +193,18 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 void AShooterCharacter::RotateInPlace(float DeltaTime)
 {
+	if (Combat && Combat->bHoldingFlag)
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	if (Combat && Combat->EquippedWeapon)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
 	if (bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;
@@ -260,10 +272,10 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (LagCompensation)
 	{
-		LagCompensation->Character = this; 
+		LagCompensation->Character = this;
 		if (Controller)
 		{
-			LagCompensation->Controller = Cast<AShooterPlayerController>(Controller); 
+			LagCompensation->Controller = Cast<AShooterPlayerController>(Controller);
 		}
 	}
 }
@@ -436,6 +448,8 @@ float AShooterCharacter::CalculateSpeed()
 
 void AShooterCharacter::Jump()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (bIsCrouched)
@@ -503,6 +517,8 @@ void AShooterCharacter::EquipButtonPressed()
 		return;
 	if (Combat)
 	{
+		if (Combat->bHoldingFlag)
+			return;
 		if (Combat->CombatState == ECombatState::ECS_Unoccupied)
 		{
 			ServerEquipButtonPressed();
@@ -581,6 +597,8 @@ void AShooterCharacter::ServerScrollDown_Implementation()
 
 void AShooterCharacter::CrouchButtonPressed()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (bIsCrouched)
@@ -595,6 +613,8 @@ void AShooterCharacter::CrouchButtonPressed()
 
 void AShooterCharacter::ReloadButtonPressed()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (Combat)
@@ -605,6 +625,8 @@ void AShooterCharacter::ReloadButtonPressed()
 
 void AShooterCharacter::AimButtonPressed()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 	{
 		Combat->SetAiming(false);
@@ -618,6 +640,8 @@ void AShooterCharacter::AimButtonPressed()
 
 void AShooterCharacter::AimButtonReleased()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (Combat)
@@ -628,6 +652,8 @@ void AShooterCharacter::AimButtonReleased()
 
 void AShooterCharacter::FireButtonPressed()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (Combat && IsWeaponEquipped())
@@ -638,6 +664,8 @@ void AShooterCharacter::FireButtonPressed()
 
 void AShooterCharacter::FireButtonReleased()
 {
+	if (Combat && Combat->bHoldingFlag)
+		return;
 	if (bDisableGameplay)
 		return;
 	if (Combat)
@@ -650,6 +678,8 @@ void AShooterCharacter::GrenadeButtonPressed()
 {
 	if (Combat)
 	{
+		if (Combat->bHoldingFlag)
+			return;
 		Combat->ThrowGrenade();
 	}
 }
@@ -722,23 +752,13 @@ void AShooterCharacter::CalculateAO_Pitch()
 
 void AShooterCharacter::Elim(bool bPlayerLeftGame)
 {
-	if (Combat)
-	{
-		if (Combat->EquippedWeapon)
-		{
-			DropOrDestroyWeapon(Combat->EquippedWeapon);
-		}
-		if (Combat->SecondWeapon)
-		{
-			DropOrDestroyWeapon(Combat->SecondWeapon);
-		}
-	}
+	DropOrDestroyWeapons();
 	MulticastElim(bPlayerLeftGame);
 }
 
 void AShooterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
-	bLeftGame = bPlayerLeftGame; 
+	bLeftGame = bPlayerLeftGame;
 	if (ShooterPlayerController)
 	{
 		ShooterPlayerController->SetHUDWeaponAmmo(0);
@@ -846,10 +866,60 @@ void AShooterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 	{
 		Weapon->Destroy();
 	}
-	else 
+	else
 	{
 		Weapon->Dropped();
 	}
+}
+
+void AShooterCharacter::DropOrDestroyWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondWeapon);
+		}
+		if (Combat->TheFlag)
+		{
+			Combat->TheFlag->Dropped();
+		}
+	}
+}
+
+void AShooterCharacter::SetSpawnPoint()
+{
+	if (HasAuthority() && ShooterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for (auto Start : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamStart = Cast<ATeamPlayerStart>(Start);
+			if (TeamStart && TeamStart->Team == ShooterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamStart);
+			}
+		}
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			ATeamPlayerStart* ChosenPlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num() - 1)];
+			SetActorLocationAndRotation(ChosenPlayerStart->GetActorLocation(), ChosenPlayerStart->GetActorRotation());
+		}
+	}
+}
+
+void AShooterCharacter::OnPlayerStateInitialized()
+{
+	ShooterPlayerState->AddToScore(0.f);
+	ShooterPlayerState->AddToDeaths(0);
+	SetTeamColor(ShooterPlayerState->GetTeam());
+	SetSpawnPoint();
 }
 
 void AShooterCharacter::UpdateDissolveMaterial(float DissolveValue)
@@ -895,7 +965,7 @@ void AShooterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	Damage = ShooterGameMode->CalculateDamage(InstigatorController, Controller, Damage);
 
 	if (Damage <= 0.f)
-		return; 
+		return;
 
 	float DamageToHealth = Damage;
 	if (Shield > 0.f)
@@ -995,10 +1065,7 @@ void AShooterCharacter::PollInit()
 		ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
 		if (ShooterPlayerState)
 		{
-			ShooterPlayerState->AddToScore(0.f);
-			ShooterPlayerState->AddToDeaths(0);
-			SetTeamColor(ShooterPlayerState->GetTeam());
-
+			OnPlayerStateInitialized();
 			AShooterGameState* ShooterGameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(this));
 			if (ShooterGameState && ShooterGameState->TopScoringPlayers.Contains(ShooterPlayerState))
 			{
@@ -1062,23 +1129,45 @@ bool AShooterCharacter::isLocallyReloading()
 	return Combat->bLocallyReloading;
 }
 
+FORCEINLINE bool AShooterCharacter::IsHoldingTheFlag() const
+{
+	if (Combat == nullptr)
+		return false;
+	return Combat->bHoldingFlag;
+}
+
+ETeam AShooterCharacter::GetTeam()
+{
+	ShooterPlayerState = ShooterPlayerState == nullptr ? GetPlayerState<AShooterPlayerState>() : ShooterPlayerState;
+	if (ShooterPlayerState == nullptr)
+		return ETeam::ET_NoTeam;
+	return ShooterPlayerState->GetTeam();
+}
+
+void AShooterCharacter::SetHoldingFlag(bool bHolding)
+{
+	if (Combat == nullptr)
+		return;
+	Combat->bHoldingFlag = bHolding;
+}
+
 void AShooterCharacter::SetTeamColor(ETeam Team)
 {
 	if (GetMesh() == nullptr || DefaultMaterial == nullptr)
-		return; 
+		return;
 	switch (Team)
 	{
-	case ETeam::ET_NoTeam:
-		GetMesh()->SetMaterial(0, DefaultMaterial);
-		DissolveMaterialInstance = BlueDissolve;
-		break; 
-	case ETeam::ET_BlueTeam:
-		GetMesh()->SetMaterial(0, BlueMaterial); 
-		DissolveMaterialInstance = BlueDissolve;
-		break; 
-	case ETeam::ET_RedTeam:
-		GetMesh()->SetMaterial(0, RedMaterial);
-		DissolveMaterialInstance = RedDissolve;
-		break;
+		case ETeam::ET_NoTeam:
+			GetMesh()->SetMaterial(0, DefaultMaterial);
+			DissolveMaterialInstance = BlueDissolve;
+			break;
+		case ETeam::ET_BlueTeam:
+			GetMesh()->SetMaterial(0, BlueMaterial);
+			DissolveMaterialInstance = BlueDissolve;
+			break;
+		case ETeam::ET_RedTeam:
+			GetMesh()->SetMaterial(0, RedMaterial);
+			DissolveMaterialInstance = RedDissolve;
+			break;
 	}
 }
