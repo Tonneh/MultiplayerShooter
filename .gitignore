@@ -13,6 +13,13 @@
 !/Config/**
 !/Plugins/**
 
+#ignoring megascans
+
+/Content/Megascans
+/Content/MSPresets
+/Content/LargeSnowRocksPacks
+/Content/STF
+
 # Only allow .uasset and .umap files from /Content dir.
 # They're tracked by git-lfs, don't forget to track other
 # files if adding them here.
