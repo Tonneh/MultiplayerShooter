@@ -164,10 +164,6 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
-	UpdateHUDHP();
-	UpdateHUDShield();
 	if (Combat)
 	{
 		Combat->UpdateHUDGrenades();
@@ -1071,6 +1067,18 @@ void AShooterCharacter::PollInit()
 			{
 				MulticastGainedTheLead();
 			}
+		}
+	}
+	if (ShooterPlayerController == nullptr)
+	{
+		ShooterPlayerController = ShooterPlayerController == nullptr ? Cast<AShooterPlayerController>(Controller) : ShooterPlayerController;
+		if (ShooterPlayerController)
+		{
+			SpawnDefaultWeapon();
+			UpdateHUDAmmo();
+			UpdateHUDHP();
+			UpdateHUDShield();
+			Combat->UpdateHUDGrenades();
 		}
 	}
 }

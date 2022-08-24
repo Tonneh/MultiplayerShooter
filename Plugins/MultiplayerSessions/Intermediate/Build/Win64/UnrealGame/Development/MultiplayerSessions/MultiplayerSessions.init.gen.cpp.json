@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "g:\\unreal5 projects\\multiplayershooter\\plugins\\multiplayersessions\\intermediate\\build\\win64\\unrealgame\\inc\\multiplayersessions\\multiplayersessions.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "g:\\unreal5 projects\\multiplayershooter\\intermediate\\build\\win64\\multiplayershooter\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "g:\\unreal5 projects\\multiplayershooter\\plugins\\multiplayersessions\\intermediate\\build\\win64\\unrealgame\\development\\multiplayersessions\\definitions.multiplayersessions.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
