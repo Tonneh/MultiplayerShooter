@@ -96,6 +96,8 @@ protected:
 	void ScrollUp();
 	void ScrollDown(); 
 	void CrouchButtonPressed();
+	void SprintButtonPressed();
+	void SprintButtonReleased();
 	void ReloadButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
@@ -194,6 +196,12 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerScrollDown();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSprintButtonPressed();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSprintButtonReleased();
 
 	// Rotation for aiming etc
 

@@ -237,6 +237,9 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("ThrowGrenade", EInputEvent::IE_Pressed, this, &AShooterCharacter::GrenadeButtonPressed);
 	PlayerInputComponent->BindAction("ScrollSwapWeaponUp", EInputEvent::IE_Pressed, this, &AShooterCharacter::ScrollUp);
 	PlayerInputComponent->BindAction("ScrollSwapWeaponDown", EInputEvent::IE_Pressed, this, &AShooterCharacter::ScrollDown);
+	PlayerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AShooterCharacter::SprintButtonPressed);
+	PlayerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AShooterCharacter::SprintButtonReleased);
+
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AShooterCharacter::Turn);
@@ -605,6 +608,32 @@ void AShooterCharacter::CrouchButtonPressed()
 	{
 		Crouch();
 	}
+}
+
+void AShooterCharacter::SprintButtonPressed()
+{
+	if (bDisableGameplay)
+		return;
+	MulticastSprintButtonPressed();
+}
+
+void AShooterCharacter::SprintButtonReleased()
+{
+	if (bDisableGameplay)
+		return;
+	MulticastSprintButtonReleased();
+}
+
+void AShooterCharacter::MulticastSprintButtonPressed_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 500.f;
+}
+
+void AShooterCharacter::MulticastSprintButtonReleased_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 300.f;
 }
 
 void AShooterCharacter::ReloadButtonPressed()
