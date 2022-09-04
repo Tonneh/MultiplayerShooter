@@ -28,7 +28,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
     FVector Velocity = ShooterCharacter->GetVelocity(); 
     Velocity.Z = 0.f; 
     Speed = Velocity.Size(); 
-
+	
     bIsInAir = ShooterCharacter->GetCharacterMovement()->IsFalling(); 
     bIsAccelerating = ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false; 
     bWeaponEquipped = ShooterCharacter->IsWeaponEquipped();

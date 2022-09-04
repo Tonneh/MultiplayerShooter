@@ -415,7 +415,17 @@ void AShooterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 			ShooterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 		if (!HasAuthority())
-			return;
+		{
+			if (bShowTeamScores)
+			{
+				InitTeamScores();
+			}
+			else
+			{
+				HideTeamScores();
+			}
+			return; 
+		}
 		if (bTeamsMatch)
 		{
 			InitTeamScores();

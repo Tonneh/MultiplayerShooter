@@ -9,6 +9,7 @@
 #include "Sound/SoundCue.h"
 #include "DrawDebugHelpers.h"
 #include "WeaponTypes.h"
+#include "Camera/CameraComponent.h"
 #include "MultiplayerShooter/ShooterComponents/LagCompensationComponent.h"
 #include "MultiplayerShooter/PlayerController/ShooterPlayerController.h"
 
@@ -74,7 +75,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			UGameplayStatics::PlaySoundAtLocation(
 				this,
 				FireSound,
-				GetActorLocation());
+				ShooterOwnerCharacter->GetCamera()->GetComponentLocation());
 		}
 	}
 }

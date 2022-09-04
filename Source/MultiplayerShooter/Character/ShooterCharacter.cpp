@@ -303,7 +303,7 @@ void AShooterCharacter::PlayElimMontage()
 	}
 }
 
-void AShooterCharacter::PlayReloadMontage()
+void AShooterCharacter::PlayReloadMontage() 
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr)
 		return;
@@ -1166,7 +1166,7 @@ bool AShooterCharacter::isLocallyReloading()
 	return Combat->bLocallyReloading;
 }
 
-FORCEINLINE bool AShooterCharacter::IsHoldingTheFlag() const
+bool AShooterCharacter::IsHoldingTheFlag() const
 {
 	if (Combat == nullptr)
 		return false;
