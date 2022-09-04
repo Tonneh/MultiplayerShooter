@@ -625,7 +625,6 @@ void UCombatComponent::FinishSwap()
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
-	PlayEquippedWeaponSound(SecondWeapon);
 	if (Character == nullptr || !Character->HasAuthority())
 		return;
 	AWeapon* TempWeapon = EquippedWeapon;
