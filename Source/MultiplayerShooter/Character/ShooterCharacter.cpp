@@ -522,12 +522,6 @@ void AShooterCharacter::EquipButtonPressed()
 		{
 			ServerEquipButtonPressed();
 		}
-		if (Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied && OverlappingWeapon == nullptr)
-		{
-			PlaySwapMontage();
-			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
-			bFinishedSwapping = false;
-		}
 	}
 }
 
@@ -538,10 +532,6 @@ void AShooterCharacter::ServerEquipButtonPressed_Implementation()
 		if (OverlappingWeapon)
 		{
 			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else if (Combat->ShouldSwapWeapons())
-		{
-			Combat->SwapWeapons();
 		}
 	}
 }
@@ -614,26 +604,40 @@ void AShooterCharacter::SprintButtonPressed()
 {
 	if (bDisableGameplay)
 		return;
-	MulticastSprintButtonPressed();
+	if (GetCharacterMovement() && GetCharacterMovement()->MaxWalkSpeed > 1000.f && GetCharacterMovement()->MaxWalkSpeedCrouched > 500.f)
+		return;
+	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 500.f;
+	ServerSprintButtonPressed();
 }
 
 void AShooterCharacter::SprintButtonReleased()
 {
 	if (bDisableGameplay)
 		return;
-	MulticastSprintButtonReleased();
-}
-
-void AShooterCharacter::MulticastSprintButtonPressed_Implementation()
-{
-	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
-	GetCharacterMovement()->MaxWalkSpeedCrouched = 500.f;
-}
-
-void AShooterCharacter::MulticastSprintButtonReleased_Implementation()
-{
+	if (GetCharacterMovement() && GetCharacterMovement()->MaxWalkSpeed > 1000.f && GetCharacterMovement()->MaxWalkSpeedCrouched > 500.f)
+		return;
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 300.f;
+	ServerSprintButtonReleased();
+}
+
+void AShooterCharacter::ServerSprintButtonPressed_Implementation()
+{
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 1000.f;
+		GetCharacterMovement()->MaxWalkSpeedCrouched = 500.f;
+	}
+}
+
+void AShooterCharacter::ServerSprintButtonReleased_Implementation()
+{
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+		GetCharacterMovement()->MaxWalkSpeedCrouched = 300.f;
+	}
 }
 
 void AShooterCharacter::ReloadButtonPressed()

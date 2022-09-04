@@ -376,7 +376,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Character->Crouch();
 		bHoldingFlag = true;
-		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped); 
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachFlagToLeftHand(WeaponToEquip);
 		WeaponToEquip->SetOwner(Character);
 		TheFlag = WeaponToEquip;
@@ -400,7 +400,6 @@ void UCombatComponent::SwapWeapons()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr)
 		return;
-
 	Character->PlaySwapMontage();
 	Character->bFinishedSwapping = false;
 	CombatState = ECombatState::ECS_SwappingWeapons;
@@ -626,6 +625,9 @@ void UCombatComponent::FinishSwap()
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
+	PlayEquippedWeaponSound(SecondWeapon);
+	if (Character == nullptr || !Character->HasAuthority())
+		return;
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondWeapon;
 	SecondWeapon = TempWeapon;
@@ -899,6 +901,6 @@ void UCombatComponent::OnRep_HoldingTheFlag()
 {
 	if (bHoldingFlag && Character && Character->IsLocallyControlled())
 	{
-		Character->Crouch(); 
+		Character->Crouch();
 	}
 }

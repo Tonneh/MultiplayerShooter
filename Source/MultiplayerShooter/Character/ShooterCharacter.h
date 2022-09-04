@@ -197,11 +197,11 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerScrollDown();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSprintButtonPressed();
+	UFUNCTION(Server, Reliable)
+	void ServerSprintButtonPressed();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSprintButtonReleased();
+	UFUNCTION(Server, Reliable)
+	void ServerSprintButtonReleased();
 
 	// Rotation for aiming etc
 
