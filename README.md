@@ -7,7 +7,7 @@ MultiplayerShooter that is developed fully in Unreal Engine 5 C++.
 
 Includes a plugin to connect players to the same session, requires a steam login to host and connect to servers.  
 
-Includes a Snowy Map 
+Includes a Snowy Map, Note: (Textures for map isn't uploaded to github, as the files were too large. As in 60+ gbs, however, packaged game will have.)  
 
 Announcements for who won or which team has won, when the match starts, when the match ends, and when next match starts. 
 
