@@ -4,14 +4,16 @@ https://youtu.be/e-MX58uW0oY Demo of the Game
 
 MultiplayerShooter that is developed fully in Unreal Engine 5 C++. 
 
-To play, download here : https://mega.nz/file/QAdkmYrC#JgrjLm_kxRFuWvEs_-PP6owJ64xkm_uwBPdVMbILUX4
+## Try out the game
+To play, download here (1.85 GB): https://mega.nz/file/QAdkmYrC#JgrjLm_kxRFuWvEs_-PP6owJ64xkm_uwBPdVMbILUX4
 
 Check box which gamemode you'd like to play and the number of players you want in your game. Game won't start until that many players joins, put 1 if you're by yourself looking around. :eyes:	
 
-Includes a plugin to connect players to the same session, requires a steam login to host and connect to servers.  
+## Important
+Includes a Snowy Map made with quixel bridge assets. Note: (Textures for map isn't uploaded to github, as the files were too large (60+ gbs). However, the packaged game (above download link above) will have the map textures.)  
 
-Includes a Snowy Map made with quixel bridge assets.
-Note: (Textures for map isn't uploaded to github, as the files were too large. As in 60+ gbs, however, packaged game will have.)  
+## Game Details
+Includes a plugin to connect players to the same session, requires a steam login to host and connect to servers.  
 
 Announcements for who won or which team has won, when the match starts, when the match ends, and when next match starts. 
 
